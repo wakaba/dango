@@ -1,0 +1,76 @@
+# Databases for my application 1
+
+storage_set myapp1
+
+db_set user
+  .desc = User database
+  .name_template = user
+
+table_set user.user
+  .desc = User main data
+  .name_template = user
+table_set user.user_option
+  .desc = User additional data
+  .name_template = user_option
+
+db_set timeline[]
+  .name_template = timeline_{$1.index}
+
+table_suffix_type timeline_type
+
+table_suffix timeline_type.activities
+  .index = 12
+  .timeline_type_id = 2
+table_suffix timeline_type.guestbook
+  .index = 13
+  .timeline_type_id = 3
+table_suffix timeline_type.feed
+  .index = 14
+  .timeline_type_id = 4
+
+table_set timeline.index[timeline_type,]
+  .name_template = tlindex_{$1.index}_{$2.index}
+table_set timeline.index_option[timeline_type,]
+  .name_template = tlindex_option_{$1.index}_{$2.index}
+
+storage_role myapp1-userdb
+  .desc = User DB
+  .hostname.master = 192.168.0.1
+  .hostname.default = 192.168.0.2
+  .hostname.batch = 192.168.0.3
+storage_role myapp1-timelinedb1
+  .desc = Timeline DB, region 1
+storage_role myapp1-timelinedb2
+  .desc = Timeline DB, region 2
+
+app_role backend1
+  .desc = Default application servers, region 1
+app_role backend2
+  .desc = Default application servers, region 2
+app_role checker
+  .desc = Read-only storage checker
+
+db user myapp1-userdb
+  .use.backend1 default,batch
+  .use.backend2 default,batch
+
+table user.user
+table user.user_option
+
+db timeline[activities,1] myapp1-timelinedb1
+  .use.backend1 master,default,batch
+  .use.backend2        default,batch
+db timeline[guestbook,1] myapp1-timelinedb1
+  .use.backend1 master,default,batch
+  .use.backend2        default,batch
+
+db timeline[activities,2] myapp1-timelinedb2
+  .use.backend1        default,batch
+  .use.backend2 master,default,batch
+
+table timeline[activities,1].index[activities,1]
+table timeline[activities,1].index_option[activities,1]
+table timeline[guestbook,1].index[guestbook,1]
+table timeline[guestbook,1].index_option[guestbook,1]
+table timeline[activities,2].index[activities,2]
+table timeline[activities,2].index_option[activities,2]

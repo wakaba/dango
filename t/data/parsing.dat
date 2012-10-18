@@ -1,0 +1,173 @@
+#data
+#parsed
+
+#data
+| 
+|    
+|   # db_set abc  
+|     ##  
+| 
+#parsed
+
+#data
+hoge
+#parsed
+#errors
+Syntax error at line 1 (hoge)
+
+#data
+storage_set hoge_-fuga  
+#parsed
+storage_set hoge_-fuga
+
+#data
+storage_set hoge
+storage_set fuga
+#parsed
+storage_set fuga
+storage_set hoge
+
+#data
+storage_set hoge
+db_set fuga
+#parsed
+storage_set hoge
+db_set fuga
+
+#data
+storage_set aaa
+db_set abc
+db_set xyz
+#parsed
+storage_set aaa
+db_set abc
+db_set xyz
+
+#data
+db_set abc
+storage_set xyz
+#parsed
+storage_set xyz
+#errors
+Storage set is not defined yet at line 1 (db_set abc)
+
+#data
+storage_set fuga
+db_set hoge
+table_set hoge.abc
+#parsed
+storage_set fuga
+db_set hoge
+table_set hoge.abc
+
+#data
+storage_set fuga
+table_set hoge.aaa
+#parsed
+storage_set fuga
+#errors
+Object hoge not defined at line 2 (table_set hoge.aaa)
+
+#data
+storage_set fuga
+table_set hoge.aaa
+db_set hoge
+#parsed
+storage_set fuga
+db_set hoge
+#errors
+Object hoge not defined at line 2 (table_set hoge.aaa)
+
+#data
+table_set aaa
+#parsed
+#errors
+Syntax error at line 1 (table_set aaa)
+
+#data
+table_set aaa.bbb
+#parsed
+#errors
+Storage set is not defined yet at line 1 (table_set aaa.bbb)
+
+#data
+storage_set fuga
+db_set aaa
+table_set hoge
+#parsed
+storage_set fuga
+db_set aaa
+#errors
+Syntax error at line 3 (table_set hoge)
+
+#data
+storage_set hogte
+db_set abc[]
+#parsed
+storage_set hogte
+db_set abc[]
+
+#data
+storage_set hogte
+db_set abc[][]
+#parsed
+storage_set hogte
+db_set abc[][]
+
+#data
+storage_set hogte
+db_set abc[xyz]
+#parsed
+storage_set hogte
+db_set abc[xyz]
+
+#data
+storage_set hoge
+table_suffix_type a-bc
+#parsed
+storage_set hoge
+table_suffix_type a-bc
+
+#data
+storage_set hoge
+  table_suffix_type --
+db_set abc
+#parsed
+storage_set hoge
+table_suffix_type --
+db_set abc
+
+#data
+table_suffix_type hoge
+storage_set hoge
+#parsed
+storage_set hoge
+#errors
+Storage set is not defined yet at line 1 (table_suffix_type hoge)
+
+#data
+storage_set hoge
+table_suffix_type   type1
+table_suffix type1.aa
+table_suffix type1.bb
+#parsed
+storage_set hoge
+table_suffix_type type1
+table_suffix type1.aa
+table_suffix type1.bb
+
+#data
+storage_set hoge
+table_suffix  type.value
+#parsed
+storage_set hoge
+#errors
+Object type not defined at line 2 (table_suffix  type.value)
+
+#data
+table_suffix type.value
+storage_set hoge
+#parsed
+storage_set hoge
+#errors
+Storage set is not defined yet at line 1 (table_suffix type.value)
