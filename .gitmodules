@@ -43,3 +43,6 @@
 [submodule "modules/web-useragent-functions"]
 	path = modules/web-useragent-functions
 	url = git://github.com/wakaba/perl-web-useragent-functions
+[submodule "t_deps/modules/testdataparser"]
+	path = t_deps/modules/testdataparser
+	url = git://github.com/wakaba/testdataparser.git
