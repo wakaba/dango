@@ -24,7 +24,7 @@ sub parent_name {
     return $_[0]->db_set_name;
 }
 
-sub as_testable {
+sub _as_testable {
     return sprintf 'table_set %s.%s%s',
         $_[0]->db_set_name, $_[0]->name,
         join '', map { defined $_->{type} ? "[$_->{type}]" : "[]" } @{$_[0]->suffixes};

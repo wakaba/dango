@@ -12,7 +12,7 @@ sub type {
     return 'db_set';
 }
 
-sub as_testable {
+sub _as_testable {
     return sprintf 'db_set %s%s',
         $_[0]->name,
         join '', map { defined $_->{type} ? "[$_->{type}]" : "[]" } @{$_[0]->suffixes};

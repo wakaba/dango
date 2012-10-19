@@ -24,7 +24,7 @@ sub parent_name {
     return $_[0]->table_suffix_type_name;
 }
 
-sub as_testable {
+sub _as_testable {
     return sprintf 'table_suffix %s.%s',
         $_[0]->table_suffix_type_name, $_[0]->name;
 }

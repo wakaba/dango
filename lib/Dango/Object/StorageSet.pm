@@ -12,7 +12,7 @@ sub type {
     return 'storage_set';
 }
 
-sub as_testable {
+sub _as_testable {
     return sprintf 'storage_set %s', $_[0]->name;
 }
 

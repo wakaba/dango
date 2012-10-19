@@ -51,25 +51,25 @@ app_role checker
   .desc = Read-only storage checker
 
 db myapp1-userdb.user
-  .use.backend1 default,batch
-  .use.backend2 default,batch
+  .datasource.backend1 <- default,batch
+  .datasource.backend2 <- default,batch
 
 table user.user
 table user.user_option
 
 db myapp1-timelinedb1.timeline[activities,1]
-  .use.backend1 master,default,batch
-  .use.backend2        default,batch
-  .use.checker                 batch
+  .datasource.backend1 <- master,default,batch
+  .datasource.backend2 <-        default,batch
+  .datasource.checker  <-                batch
 db myapp1-timelinedb1.timeline[guestbook,1]
-  .use.backend1 master,default,batch
-  .use.backend2        default,batch
-  .use.checker                 batch
+  .datasource.backend1 <- master,default,batch
+  .datasource.backend2 <-        default,batch
+  .datasource.checker  <-                batch
 
 db myapp1-timelinedb2.timeline[activities,2]
-  .use.backend1        default,batch
-  .use.backend2 master,default,batch
-  .use.checker                 batch
+  .datasource.backend1 <-        default,batch
+  .datasource.backend2 <- master,default,batch
+  .datasource.checker  <-                batch
 
 table timeline[activities,1].index[activities,1]
 table timeline[activities,1].index_option[activities,1]

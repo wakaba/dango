@@ -1,0 +1,79 @@
+#data
+storage_set hoge
+.name = hoge1
+.abc =  fu  faga aaa
+#parsed
+storage_set hoge
+  .abc = fu  faga aaa
+  .name = hoge1
+
+#data
+storage_set habc
+db_set xxa
+   .name.ho-_ge = aaabbb 
+   .124 =  54444
+#parsed
+storage_set habc
+db_set xxa
+  .124 = 54444
+  .name.ho-_ge = aaabbb
+
+#data
+storage_set aa
+  .name = aa
+  .name.2 = bb
+#parsed
+storage_set aa
+  .name = aa
+  .name.2 = bb
+
+#data
+.name = aaaa
+storage_set aaa
+#parsed
+storage_set aaa
+#errors
+Target object is not defined yet at line 1 (.name = aaaa)
+
+#data
+storage_set aaa
+  .name = bbb
+  .name = abc
+#parsed
+storage_set aaa
+  .name = bbb
+#errors
+Property name is already specified at line 3 (.name = abc)
+
+#data
+storage_set foo
+  .name <- aaa,bbb  , ccc , ddd,AAA,
+#parsed
+storage_set foo
+  .name <- AAA,aaa,bbb,ccc,ddd
+
+#data
+storage_set foo
+  .name <- bar
+  .name = aaa
+#parsed
+storage_set foo
+  .name <- bar
+#errors
+Property name is already specified at line 3 (.name = aaa)
+
+#data
+storage_set 0
+  .name =  aaa    
+#parsed
+storage_set 0
+  .name = aaa
+
+#data
+storage_set 0
+  .name = 
+  .value <-
+#parsed
+storage_set 0
+  .name = 
+  .value <- 

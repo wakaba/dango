@@ -20,7 +20,7 @@ sub storage_role_name {
     return $_[0]->{storage_role_name};
 }
 
-sub as_testable {
+sub _as_testable {
     return sprintf 'db %s.%s%s',
         $_[0]->storage_role_name,
         $_[0]->name,

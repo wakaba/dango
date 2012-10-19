@@ -12,7 +12,7 @@ sub type {
     return 'table_suffix_type';
 }
 
-sub as_testable {
+sub _as_testable {
     return sprintf 'table_suffix_type %s',
         $_[0]->name;
 }

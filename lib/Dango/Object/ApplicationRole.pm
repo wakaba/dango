@@ -12,7 +12,7 @@ sub type {
     return 'app_role';
 }
 
-sub as_testable {
+sub _as_testable {
     return sprintf 'app_role %s',
         $_[0]->name;
 }

@@ -25,7 +25,7 @@ sub db_suffixes {
     return $_[0]->{db_suffixes};
 }
 
-sub as_testable {
+sub _as_testable {
     return sprintf 'table %s%s.%s%s',
         $_[0]->db_set_name,
         (join '', map { "[$_->{name}]" } @{$_[0]->db_suffixes}),

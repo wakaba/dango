@@ -271,6 +271,34 @@ sub parse_char_string {
             $repo->add_object($obj);
             $last_obj = $obj;
 
+        # Properties
+
+        } elsif ($line =~ /^\.([0-9A-Za-z_-]+(?:\.[0-9A-Za-z_-]+)*)\s*(=|<-)\s*(.*)$/) {
+            unless ($last_obj) {
+                $self->onerror->(
+                    message => "Target object is not defined yet",
+                    line => $line_number, line_data => $line,
+                );
+                $has_error = 1;
+                next;
+            }
+            if ($last_obj->has_prop($1)) {
+                $self->onerror->(
+                    message => "Property $1 is already specified",
+                    line => $line_number, line_data => $line,
+                );
+                $has_error = 1;
+                next;
+            }
+            my ($n, $op, $v) = ($1, $2, $3);
+            $v =~ s/\A\s+//;
+            $v =~ s/\s+\z//;
+            if ($op eq '=') {
+                $last_obj->set_prop($n => $v);
+            } elsif ($op eq '<-') {
+                $last_obj->set_prop($n => {map { $_ => 1 } split /\s*,\s*/, $v});
+            }
+
         } else {
             $self->onerror->(
                 message => "Syntax error",
