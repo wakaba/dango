@@ -18,10 +18,10 @@ sub add_object {
     } elsif ({
         db_set => 1,
         table_suffix_type => 1,
-        db => 1,
-        table => 1,
     }->{$obj_type}) {
         $self->{$obj_type}->{$obj->storage_set_name}->{$obj->name} = $obj;
+    } elsif ($obj_type eq 'db' or $obj_type eq 'table') {
+        $self->{$obj_type}->{$obj->storage_set_name}->{$obj->name, map { $_->{name} } @{$obj->suffixes}} = $obj;
     } elsif ({table_set => 1, table_suffix => 1}->{$obj_type}) {
         $self->{$obj_type}->{$obj->storage_set_name}->{$obj->parent_name}->{$obj->name} = $obj;
     } else {
@@ -41,10 +41,10 @@ sub has_object {
     } elsif ({
         db_set => 1,
         table_suffix_type => 1,
-        db => 1,
-        table => 1,
     }->{$obj_type}) {
         return !!$self->{$obj_type}->{$obj->storage_set_name}->{$obj->name};
+    } elsif ($obj_type eq 'db' or $obj_type eq 'table') {
+        return !!$self->{$obj_type}->{$obj->storage_set_name}->{$obj->name, map { $_->{name} } @{$obj->suffixes}};
     } elsif ({table_set => 1, table_suffix => 1}->{$obj_type}) {
         return !!$self->{$obj_type}->{$obj->storage_set_name}->{$obj->parent_name}->{$obj->name};
     } else {
@@ -57,6 +57,11 @@ sub get_db_set {
     return $self->{db_set}->{$storage_set->name}->{$db_set_name}; # or undef
 }
 
+sub get_table_set {
+    my ($self, $storage_set, $db_set, $name) = @_;
+    return $self->{table_set}->{$storage_set->name}->{$db_set->name}->{$name}; # or undef
+}
+
 sub get_table_suffix_type {
     my ($self, $storage_set, $table_suffix_type_name) = @_;
     return $self->{table_suffix_type}->{$storage_set->name}->{$table_suffix_type_name}; # or undef
@@ -64,12 +69,17 @@ sub get_table_suffix_type {
 
 sub get_table_suffix {
     my ($self, $storage_set, $table_suffix_type, $name) = @_;
-    return $self->{table_suffix}->{$storage_set->name}->{$table_suffix_type->name}->{$name};
+    return $self->{table_suffix}->{$storage_set->name}->{$table_suffix_type->name}->{$name}; # or undef
 }
 
 sub get_storage_role {
     my ($self, $name) = @_;
-    return $self->{storage_role}->{$name};
+    return $self->{storage_role}->{$name}; # or undef
+}
+
+sub get_db {
+    my ($self, $storage_set, $name, $suffixes) = @_;
+    return $self->{db}->{$storage_set->name}->{$name, map { $_->{name} } @$suffixes}; # or undef
 }
 
 sub as_testable {
@@ -105,6 +115,10 @@ sub as_testable {
         for my $db_name (sort { $a cmp $b } keys %{$self->{db}->{$storage_set_name} or {}}) {
             my $db = $self->{db}->{$storage_set_name}->{$db_name};
             $result .= $db->as_testable . "\n";
+        }
+        for my $table_name (sort { $a cmp $b } keys %{$self->{table}->{$storage_set_name} or {}}) {
+            my $table = $self->{table}->{$storage_set_name}->{$table_name};
+            $result .= $table->as_testable . "\n";
         }
     }
     return $result;

@@ -10,6 +10,7 @@ use Dango::Object::TableSet;
 use Dango::Object::TableSuffixType;
 use Dango::Object::TableSuffix;
 use Dango::Object::Database;
+use Dango::Object::Table;
 
 sub new {
     return bless {}, $_[0];
@@ -204,6 +205,60 @@ sub parse_char_string {
                 next;
             }
             my $obj = Dango::Object::Database->new_from_storage_set_and_storage_role_and_db_set($storage_set, $role, $db_set);
+            $obj->suffixes($suffixes);
+            if ($repo->has_object($obj)) {
+                $self->onerror->(
+                    message => "Duplicate definition",
+                    line => $line_number, line_data => $line,
+                );
+                $has_error = 1;
+                next;
+            }
+            $repo->add_object($obj);
+            $last_obj = $obj;
+        } elsif ($line =~ /^(table)\s*([0-9A-Za-z_-]+)((?:\[[0-9A-Za-z_-]*\])*)\.([0-9A-Za-z_-]+)((?:\[[0-9A-Za-z_-]*\])*)$/) {
+            unless ($storage_set) {
+                $self->onerror->(
+                    message => "Storage set is not defined yet",
+                    line => $line_number, line_data => $line,
+                );
+                $has_error = 1;
+                next;
+            }
+            my $db_set = $repo->get_db_set($storage_set, $2);
+            unless ($db_set) {
+                $self->onerror->(
+                    message => "Database set $2 not defined",
+                    line => $line_number, line_data => $line,
+                );
+                $has_error = 1;
+                next;
+            }
+            my $suffixes = $self->parse_suffix_instance($storage_set, $db_set, $3, $line_number, $line);
+            my $db = $repo->get_db($storage_set, $2, $suffixes);
+            unless ($db) {
+                $self->onerror->(
+                    message => "Database $2$3 not defined",
+                    line => $line_number, line_data => $line,
+                );
+                $has_error = 1;
+                next;
+            }
+            my $table_set = $repo->get_table_set($storage_set, $db_set, $4);
+            unless ($table_set) {
+                $self->onerror->(
+                    message => "Table set $4 not defined",
+                    line => $line_number, line_data => $line,
+                );
+                $has_error = 1;
+                next;
+            }
+            my $suffixes = $self->parse_suffix_instance($storage_set, $table_set, $5, $line_number, $line);
+            unless ($suffixes) {
+                $has_error = 1;
+                next;
+            }
+            my $obj = Dango::Object::Table->new_from_storage_set_and_db_and_table_set($storage_set, $db, $table_set);
             $obj->suffixes($suffixes);
             if ($repo->has_object($obj)) {
                 $self->onerror->(

@@ -408,3 +408,75 @@ table_suffix xyz.abc
 db_set fuga[][xyz]
 db abc.fuga[0][abc]
 #errors
+
+#data
+storage_set hoge
+db_set fuga[]
+storage_role abc
+db abc.fuga[1]
+db abc.fuga[2]
+#parsed
+storage_role abc
+storage_set hoge
+db_set fuga[]
+db abc.fuga[1]
+db abc.fuga[2]
+
+#data
+storage_set hoge
+db_set fuga[]
+table_set fuga.bar[]
+storage_role aaa
+db aaa.fuga[1]
+db aaa.fuga[2]
+table fuga[1].bar[0]
+table fuga[1].bar[2]
+#parsed
+storage_role aaa
+storage_set hoge
+db_set fuga[]
+table_set fuga.bar[]
+db aaa.fuga[1]
+db aaa.fuga[2]
+table fuga[1].bar[0]
+table fuga[1].bar[2]
+
+#data
+storage_set hoge
+storage_role fuga
+table_suffix_type abc
+db_set aaa[abc]
+table_set aaa.def[abc]
+db fuga.aaa[124]
+table aaa[124].def[133]
+#parsed
+storage_role fuga
+storage_set hoge
+table_suffix_type abc
+db_set aaa[abc]
+table_set aaa.def[abc]
+#errors
+Table suffix 124 not defined at line 6 (db fuga.aaa[124])
+Table suffix 124 not defined at line 7 (table aaa[124].def[133])
+Database aaa[124] not defined at line 7 (table aaa[124].def[133])
+
+#data
+storage_set hoge
+storage_role fuga
+table_suffix_type abc
+table_suffix abc.133
+table_suffix abc.124
+db_set aaa[abc]
+table_set aaa.def[abc]
+db fuga.aaa[124]
+table aaa[124].def[133]
+#parsed
+storage_role fuga
+storage_set hoge
+table_suffix_type abc
+table_suffix abc.124
+table_suffix abc.133
+db_set aaa[abc]
+table_set aaa.def[abc]
+db fuga.aaa[124]
+table aaa[124].def[133]
