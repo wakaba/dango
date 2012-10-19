@@ -119,7 +119,8 @@ storage_set hogte
 db_set abc[xyz]
 #parsed
 storage_set hogte
-db_set abc[xyz]
+#errors
+Table suffix type xyz not defined at line 2 (db_set abc[xyz])
 
 #data
 storage_set hoge
@@ -171,3 +172,51 @@ storage_set hoge
 storage_set hoge
 #errors
 Storage set is not defined yet at line 1 (table_suffix type.value)
+
+#data
+storage_set hoge
+table_suffix_type abc
+table_suffix abc.xy
+table_suffix abc.dd
+db_set aab[abc]
+table_set aab.def[abc]
+#parsed
+storage_set hoge
+table_suffix_type abc
+table_suffix abc.dd
+table_suffix abc.xy
+db_set aab[abc]
+table_set aab.def[abc]
+
+#data
+storage_set hoge
+table_suffix_type abc
+table_suffix abc.def[]
+#parsed
+storage_set hoge
+table_suffix_type abc
+#errors
+Syntax error at line 3 (table_suffix abc.def[])
+
+#data
+storage_role hoge1
+app_role fuga
+#parsed
+storage_role hoge1
+app_role fuga
+
+#data
+storage_role hoge
+storage_role hoge
+#parsed
+storage_role hoge
+#errors
+Duplicate definition at line 2 (storage_role hoge)
+
+#data
+app_role hoge
+app_role hoge
+#parsed
+app_role hoge
+#errors
+Duplicate definition at line 2 (app_role hoge)

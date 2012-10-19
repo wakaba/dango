@@ -9,7 +9,11 @@ sub new {
 sub add_object {
     my ($self, $obj) = @_;
     my $obj_type = $obj->type;
-    if ($obj_type eq 'storage_set') {
+    if ({
+        storage_set => 1,
+        storage_role => 1,
+        app_role => 1,
+    }->{$obj_type}) {
         $self->{$obj_type}->{$obj->name} = $obj;
     } elsif ({db_set => 1, table_suffix_type => 1}->{$obj_type}) {
         $self->{$obj_type}->{$obj->storage_set_name}->{$obj->name} = $obj;
@@ -23,7 +27,11 @@ sub add_object {
 sub has_object {
     my ($self, $obj) = @_;
     my $obj_type = $obj->type;
-    if ($obj_type eq 'storage_set') {
+    if ({
+        storage_set => 1,
+        storage_role => 1,
+        app_role => 1,
+    }->{$obj_type}) {
         return !!$self->{$obj_type}->{$obj->name};
     } elsif ({db_set => 1, table_suffix_type => 1}->{$obj_type}) {
         return !!$self->{$obj_type}->{$obj->storage_set_name}->{$obj->name};
@@ -47,6 +55,14 @@ sub get_table_suffix_type {
 sub as_testable {
     my $self = shift;
     my $result = '';
+    for my $storage_role_name (sort { $a cmp $b } keys %{$self->{storage_role} or {}}) {
+        my $storage_role = $self->{storage_role}->{$storage_role_name};
+        $result .= $storage_role->as_testable . "\n";
+    }
+    for my $app_role_name (sort { $a cmp $b } keys %{$self->{app_role} or {}}) {
+        my $app_role = $self->{app_role}->{$app_role_name};
+        $result .= $app_role->as_testable . "\n";
+    }
     for my $storage_set_name (sort { $a cmp $b } keys %{$self->{storage_set} or {}}) {
         my $storage_set = $self->{storage_set}->{$storage_set_name};
         $result .= $storage_set->as_testable . "\n";

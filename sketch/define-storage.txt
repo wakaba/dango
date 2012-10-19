@@ -50,21 +50,21 @@ app_role backend2
 app_role checker
   .desc = Read-only storage checker
 
-db user myapp1-userdb
+db myapp1-userdb.user
   .use.backend1 default,batch
   .use.backend2 default,batch
 
 table user.user
 table user.user_option
 
-db timeline[activities,1] myapp1-timelinedb1
+db myapp1-timelinedb1.timeline[activities,1]
   .use.backend1 master,default,batch
   .use.backend2        default,batch
-db timeline[guestbook,1] myapp1-timelinedb1
+db myapp1-timelinedb1.timeline[guestbook,1]
   .use.backend1 master,default,batch
   .use.backend2        default,batch
 
-db timeline[activities,2] myapp1-timelinedb2
+db myapp1-timelinedb2.timeline[activities,2]
   .use.backend1        default,batch
   .use.backend2 master,default,batch
 
