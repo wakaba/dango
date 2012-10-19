@@ -9,6 +9,7 @@ use Dango::Object::DatabaseSet;
 use Dango::Object::TableSet;
 use Dango::Object::TableSuffixType;
 use Dango::Object::TableSuffix;
+use Dango::Object::Database;
 
 sub new {
     return bless {}, $_[0];
@@ -78,10 +79,12 @@ sub parse_char_string {
                 $has_error = 1;
                 next;
             }
-            unless ($self->parse_suffix($storage_set, $3 => $obj, $line_number, $line)) {
+            my $suffixes = $self->parse_suffix_definition($storage_set, $3, $line_number, $line);
+            unless ($suffixes) {
                 $has_error = 1;
                 next;
             }
+            $obj->suffixes($suffixes);
             $repo->add_object($obj);
             $last_obj = $obj;
         } elsif ($line =~ /^(table_set|table_suffix)\s+([0-9A-Za-z_-]+)\.([0-9A-Za-z_-]+)((?:\[[0-9A-Za-z_-]*\])*)$/) {
@@ -126,10 +129,12 @@ sub parse_char_string {
                 next;
             }
             if ($def->{allow_suffixes}) {
-                unless ($self->parse_suffix($storage_set, $4 => $obj, $line_number, $line)) {
+                my $suffixes = $self->parse_suffix_definition($storage_set, $4, $line_number, $line);
+                unless ($suffixes) {
                     $has_error = 1;
                     next;
                 }
+                $obj->suffixes($suffixes);
             } elsif ($4) {
                 $self->onerror->(
                     message => 'Syntax error',
@@ -164,6 +169,53 @@ sub parse_char_string {
             $repo->add_object($obj);
             $last_obj = $obj;
 
+        # Instances
+
+        } elsif ($line =~ /^(db)\s*([0-9A-Za-z_-]+)\.([0-9A-Za-z_-]+)((?:\[[0-9A-Za-z_-]*\])*)$/) {
+            unless ($storage_set) {
+                $self->onerror->(
+                    message => "Storage set is not defined yet",
+                    line => $line_number, line_data => $line,
+                );
+                $has_error = 1;
+                next;
+            }
+            my $role = $repo->get_storage_role($2);
+            unless ($role) {
+                $self->onerror->(
+                    message => "Storage role $2 not defined",
+                    line => $line_number, line_data => $line,
+                );
+                $has_error = 1;
+                next;
+            }
+            my $db_set = $repo->get_db_set($storage_set, $3);
+            unless ($db_set) {
+                $self->onerror->(
+                    message => "Database set $3 not defined",
+                    line => $line_number, line_data => $line,
+                );
+                $has_error = 1;
+                next;
+            }
+            my $suffixes = $self->parse_suffix_instance($storage_set, $db_set, $4, $line_number, $line);
+            unless ($suffixes) {
+                $has_error = 1;
+                next;
+            }
+            my $obj = Dango::Object::Database->new_from_storage_set_and_storage_role_and_db_set($storage_set, $role, $db_set);
+            $obj->suffixes($suffixes);
+            if ($repo->has_object($obj)) {
+                $self->onerror->(
+                    message => "Duplicate definition",
+                    line => $line_number, line_data => $line,
+                );
+                $has_error = 1;
+                next;
+            }
+            $repo->add_object($obj);
+            $last_obj = $obj;
+
         } else {
             $self->onerror->(
                 message => "Syntax error",
@@ -175,9 +227,10 @@ sub parse_char_string {
     return not $has_error;
 }
 
-sub parse_suffix {
-    my ($self, $storage_set, $text => $obj, $line_number, $line) = @_;
+sub parse_suffix_definition {
+    my ($self, $storage_set, $text, $line_number, $line) = @_;
     my $repo = $self->repository;
+    my $suffixes = [];
     while ($text =~ s/^\[([0-9A-Za-z_-]*)\]//) {
         if (length $1) {
             my $table_suffix_type = $repo->get_table_suffix_type($storage_set, $1);
@@ -186,12 +239,56 @@ sub parse_suffix {
                     message => "Table suffix type $1 not defined",
                     line => $line_number, line_data => $line,
                 );
-                return 0;
+                return undef;
             }
         }
-        $obj->add_suffix($1);
+        push @$suffixes, length $1 ? {type => $1} : {};
     }
-    return 1;
+    return $suffixes;
+}
+
+sub parse_suffix_instance {
+    my ($self, $storage_set, $class_obj, $text, $line_number, $line) = @_;
+    my $repo = $self->repository;
+    my $suffixes = [];
+    my $class_suffixes = $class_obj->suffixes;
+    my $i = 0;
+    while ($text =~ s/^\[([0-9A-Za-z_-]*)\]//) {
+        my $s = $class_suffixes->[$i];
+        if ($s) {
+            if (defined $s->{type}) {
+                my $table_suffix_type = $repo->get_table_suffix_type($storage_set, $s->{type});
+                my $table_suffix = $repo->get_table_suffix($storage_set, $table_suffix_type, $1);
+                unless ($table_suffix) {
+                    $self->onerror->(
+                        message => "Table suffix $1 not defined",
+                        line => $line_number, line_data => $line,
+                    );
+                    return undef;
+                }
+                push @$suffixes, {name => $1};
+            } else {
+                my $value = $1;
+                if ($value =~ /\A[0-9]+\z/) {
+                    push @$suffixes, {name => $value};
+                } else {
+                    $self->onerror->(
+                        message => "Table suffix $1 is not an integer",
+                        line => $line_number, line_data => $line,
+                    );
+                    return undef;
+                }
+            }
+        } else {
+            $self->onerror->(
+                message => 'Too many suffix specifications',
+                line => $line_number, line_data => $line,
+            );
+            return undef;
+        }
+        $i++;
+    }
+    return $suffixes;
 }
 
 1;

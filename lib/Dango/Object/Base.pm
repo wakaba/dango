@@ -19,12 +19,10 @@ sub parent_name {
 }
 
 sub suffixes {
+    if (@_ > 1) {
+        $_[0]->{suffixes} = $_[1];
+    }
     return $_[0]->{suffixes} ||= [];
-}
-
-sub add_suffix {
-    my ($self, $type) = @_;
-    push @{$_[0]->{suffixes} ||= []}, {type => $type};
 }
 
 1;

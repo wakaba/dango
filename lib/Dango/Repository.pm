@@ -15,7 +15,12 @@ sub add_object {
         app_role => 1,
     }->{$obj_type}) {
         $self->{$obj_type}->{$obj->name} = $obj;
-    } elsif ({db_set => 1, table_suffix_type => 1}->{$obj_type}) {
+    } elsif ({
+        db_set => 1,
+        table_suffix_type => 1,
+        db => 1,
+        table => 1,
+    }->{$obj_type}) {
         $self->{$obj_type}->{$obj->storage_set_name}->{$obj->name} = $obj;
     } elsif ({table_set => 1, table_suffix => 1}->{$obj_type}) {
         $self->{$obj_type}->{$obj->storage_set_name}->{$obj->parent_name}->{$obj->name} = $obj;
@@ -33,7 +38,12 @@ sub has_object {
         app_role => 1,
     }->{$obj_type}) {
         return !!$self->{$obj_type}->{$obj->name};
-    } elsif ({db_set => 1, table_suffix_type => 1}->{$obj_type}) {
+    } elsif ({
+        db_set => 1,
+        table_suffix_type => 1,
+        db => 1,
+        table => 1,
+    }->{$obj_type}) {
         return !!$self->{$obj_type}->{$obj->storage_set_name}->{$obj->name};
     } elsif ({table_set => 1, table_suffix => 1}->{$obj_type}) {
         return !!$self->{$obj_type}->{$obj->storage_set_name}->{$obj->parent_name}->{$obj->name};
@@ -50,6 +60,16 @@ sub get_db_set {
 sub get_table_suffix_type {
     my ($self, $storage_set, $table_suffix_type_name) = @_;
     return $self->{table_suffix_type}->{$storage_set->name}->{$table_suffix_type_name}; # or undef
+}
+
+sub get_table_suffix {
+    my ($self, $storage_set, $table_suffix_type, $name) = @_;
+    return $self->{table_suffix}->{$storage_set->name}->{$table_suffix_type->name}->{$name};
+}
+
+sub get_storage_role {
+    my ($self, $name) = @_;
+    return $self->{storage_role}->{$name};
 }
 
 sub as_testable {
@@ -81,6 +101,10 @@ sub as_testable {
                 my $table_set = $self->{table_set}->{$storage_set_name}->{$db_set_name}->{$table_set_name};
                 $result .= $table_set->as_testable . "\n";
             }
+        }
+        for my $db_name (sort { $a cmp $b } keys %{$self->{db}->{$storage_set_name} or {}}) {
+            my $db = $self->{db}->{$storage_set_name}->{$db_name};
+            $result .= $db->as_testable . "\n";
         }
     }
     return $result;

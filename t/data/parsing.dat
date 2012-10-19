@@ -220,3 +220,191 @@ app_role hoge
 app_role hoge
 #errors
 Duplicate definition at line 2 (app_role hoge)
+
+#data
+storage_set hoge
+db_set fuga
+storage_role aaa
+db aaa.fuga
+#parsed
+storage_role aaa
+storage_set hoge
+db_set fuga
+db aaa.fuga
+
+#data
+storage_set hoge
+db_set fuga
+storage_role aaa
+db aaa.fugab
+#parsed
+storage_role aaa
+storage_set hoge
+db_set fuga
+#errors
+Database set fugab not defined at line 4 (db aaa.fugab)
+
+#data
+storage_set hoge
+db_set fuga
+storage_role aaa
+db aaa.fuga
+db aaa.fuga
+#parsed
+storage_role aaa
+storage_set hoge
+db_set fuga
+db aaa.fuga
+#errors
+Duplicate definition at line 5 (db aaa.fuga)
+
+#data
+storage_set hoge
+db_set fuga
+storage_role aaa
+db aaab.fuga
+#parsed
+storage_role aaa
+storage_set hoge
+db_set fuga
+#errors
+Storage role aaab not defined at line 4 (db aaab.fuga)
+
+#data
+storage_set hoge
+db_set fuga[]
+storage_role abc
+db abc.fuga[12]
+#parsed
+storage_role abc
+storage_set hoge
+db_set fuga[]
+db abc.fuga[12]
+
+#data
+storage_set hoge
+db_set fuga[][]
+storage_role abc
+db abc.fuga[12][21]
+#parsed
+storage_role abc
+storage_set hoge
+db_set fuga[][]
+db abc.fuga[12][21]
+
+#data
+storage_set hoge
+db_set fuga[]
+storage_role abc
+db abc.fuga[12][10]
+#parsed
+storage_role abc
+storage_set hoge
+db_set fuga[]
+#errors
+Too many suffix specifications at line 4 (db abc.fuga[12][10])
+
+#data
+storage_set hoge
+db_set fuga[][]
+storage_role abc
+db abc.fuga[12][10][40]
+#parsed
+storage_role abc
+storage_set hoge
+db_set fuga[][]
+#errors
+Too many suffix specifications at line 4 (db abc.fuga[12][10][40])
+
+#data
+storage_set hoge
+db_set fuga[]
+storage_role abc
+db abc.fuga[abc]
+#parsed
+storage_role abc
+storage_set hoge
+db_set fuga[]
+#errors
+Table suffix abc is not an integer at line 4 (db abc.fuga[abc])
+
+#data
+storage_set hoge
+table_suffix_type xyz
+db_set fuga[xyz]
+storage_role abc
+db abc.fuga[abc]
+#parsed
+storage_role abc
+storage_set hoge
+table_suffix_type xyz
+db_set fuga[xyz]
+#errors
+Table suffix abc not defined at line 5 (db abc.fuga[abc])
+
+#data
+storage_set hoge
+table_suffix_type xyz
+table_suffix xyz.abc
+db_set fuga[xyz]
+storage_role abc
+db abc.fuga[abc]
+#parsed
+storage_role abc
+storage_set hoge
+table_suffix_type xyz
+table_suffix xyz.abc
+db_set fuga[xyz]
+db abc.fuga[abc]
+#errors
+
+#data
+storage_set hoge
+table_suffix_type xyz
+table_suffix xyz.abc
+db_set fuga[xyz][]
+storage_role abc
+db abc.fuga[abc][20]
+#parsed
+storage_role abc
+storage_set hoge
+table_suffix_type xyz
+table_suffix xyz.abc
+db_set fuga[xyz][]
+db abc.fuga[abc][20]
+#errors
+
+#data
+storage_set hoge
+table_suffix_type xyz
+table_suffix xyz.abc
+table_suffix_type aaa
+table_suffix aaa.bBB
+db_set fuga[xyz][aaa][xyz]
+storage_role abc
+db abc.fuga[abc][bBB][abc]
+#parsed
+storage_role abc
+storage_set hoge
+table_suffix_type aaa
+table_suffix aaa.bBB
+table_suffix_type xyz
+table_suffix xyz.abc
+db_set fuga[xyz][aaa][xyz]
+db abc.fuga[abc][bBB][abc]
+
+#data
+storage_set hoge
+table_suffix_type xyz
+table_suffix xyz.abc
+db_set fuga[][xyz]
+storage_role abc
+db abc.fuga[0][abc]
+#parsed
+storage_role abc
+storage_set hoge
+table_suffix_type xyz
+table_suffix xyz.abc
+db_set fuga[][xyz]
+db abc.fuga[0][abc]
+#errors
