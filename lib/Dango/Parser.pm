@@ -253,13 +253,13 @@ sub parse_char_string {
                 $has_error = 1;
                 next;
             }
-            my $suffixes = $self->parse_suffix_instance($storage_set, $table_set, $5, $line_number, $line);
-            unless ($suffixes) {
+            my $table_suffixes = $self->parse_suffix_instance($storage_set, $table_set, $5, $line_number, $line);
+            unless ($table_suffixes) {
                 $has_error = 1;
                 next;
             }
             my $obj = Dango::Object::Table->new_from_storage_set_and_db_and_table_set($storage_set, $db, $table_set);
-            $obj->suffixes($suffixes);
+            $obj->suffixes($table_suffixes);
             if ($repo->has_object($obj)) {
                 $self->onerror->(
                     message => "Duplicate definition",

@@ -13,9 +13,6 @@ table_set user.user_option
   .desc = User additional data
   .name_template = user_option
 
-db_set timeline[]
-  .name_template = timeline_{$1.index}
-
 table_suffix_type timeline_type
 
 table_suffix timeline_type.activities
@@ -28,9 +25,12 @@ table_suffix timeline_type.feed
   .index = 14
   .timeline_type_id = 4
 
-table_set timeline.index[timeline_type,]
+db_set timeline[timeline_type][]
+  .name_template = timeline_{$1.index}_{$2.index}
+
+table_set timeline.index[timeline_type][]
   .name_template = tlindex_{$1.index}_{$2.index}
-table_set timeline.index_option[timeline_type,]
+table_set timeline.index_option[timeline_type][]
   .name_template = tlindex_option_{$1.index}_{$2.index}
 
 storage_role myapp1-userdb
@@ -57,23 +57,23 @@ db myapp1-userdb.user
 table user.user
 table user.user_option
 
-db myapp1-timelinedb1.timeline[activities,1]
+db myapp1-timelinedb1.timeline[activities][1]
   .datasource.backend1 <- master,default,batch
   .datasource.backend2 <-        default,batch
   .datasource.checker  <-                batch
-db myapp1-timelinedb1.timeline[guestbook,1]
+db myapp1-timelinedb1.timeline[guestbook][1]
   .datasource.backend1 <- master,default,batch
   .datasource.backend2 <-        default,batch
   .datasource.checker  <-                batch
 
-db myapp1-timelinedb2.timeline[activities,2]
+db myapp1-timelinedb2.timeline[activities][2]
   .datasource.backend1 <-        default,batch
   .datasource.backend2 <- master,default,batch
   .datasource.checker  <-                batch
 
-table timeline[activities,1].index[activities,1]
-table timeline[activities,1].index_option[activities,1]
-table timeline[guestbook,1].index[guestbook,1]
-table timeline[guestbook,1].index_option[guestbook,1]
-table timeline[activities,2].index[activities,2]
-table timeline[activities,2].index_option[activities,2]
+table timeline[activities][1].index[activities][1]
+table timeline[activities][1].index_option[activities][1]
+table timeline[guestbook][1].index[guestbook][1]
+table timeline[guestbook][1].index_option[guestbook][1]
+table timeline[activities][2].index[activities][2]
+table timeline[activities][2].index_option[activities][2]
