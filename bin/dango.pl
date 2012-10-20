@@ -2,8 +2,20 @@ use strict;
 use warnings;
 use Getopt::Long;
 use Pod::Usage;
+use Path::Class;
 use Dango::Parser;
 use Encode;
+use JSON::Functions::XS qw(perl2json_bytes_for_record);
+
+sub mkdir_for_file ($) {
+    file($_[0])->dir->mkpath;
+}
+
+sub write_json ($$) {
+    mkdir_for_file $_[1];
+    open my $file, '>', $_[1] or die "$0: $_[1]: $!";
+    print $file perl2json_bytes_for_record $_[0];
+}
 
 sub parse_by_file_names ($) {
     my $file_names = shift;
@@ -94,6 +106,42 @@ sub fill_instance_prop ($$) {
     return not $has_error;
 }
 
+sub create_tera_storage_json ($) {
+    my $repo = shift;
+
+    my $result = {db_set_info => {}};
+
+    $repo->for_each_storage_set(sub {
+        my $storage_set = $_[0];
+        $repo->for_each_db($storage_set, sub {
+            my $db = $_[0];
+            push @{$result->{db_set_info}->{$db->name} ||= []}, {
+                db => $db->get_prop('name'),
+                db_set => $db->name,
+                tables => [],
+                writable => '',
+            };
+        });
+        $repo->for_each_table($storage_set, sub {
+            my $table = $_[0];
+            my $table_db = $repo->get_db($storage_set, $table->db_set_name, $table->db_suffixes);
+            my $table_db_name = $table_db->get_prop('name');
+            my $table_def = {
+                table => $table->get_prop('name'),
+                table_id => $table->get_prop('table_id'),
+                table_stem => $table->get_prop('table_stem'),
+                timeline_type => $table->get_prop('timline_type'),
+            };
+            for (keys %$table_def) {
+                delete $table_def->{$_} if not defined $table_def->{$_};
+            }
+            push @{[grep { $_->{db} eq $table_db_name } @{$result->{db_set_info}->{$table->db_set_name}}]->[0]->{tables} or []}, $table_def;
+        });
+    });
+    
+    return $result;
+}
+
 {
     my @command;
     
@@ -107,7 +155,7 @@ sub fill_instance_prop ($$) {
         (map {
             my $v = $_;
             "--$v=s" => sub { push @command, {type => $v, value => $_[1]} },
-        } qw(fill-instance-prop)),
+        } qw(fill-instance-prop write-tera-storage-json)),
     ) or pod2usage(-verbose => 1);
 
     unshift @command, {type => 'parse-files', file_names => [@ARGV]};
@@ -123,6 +171,9 @@ sub fill_instance_prop ($$) {
             for (split /,/, $command->{value}) {
                 $has_error = not fill_instance_prop $repository, $_;
             }
+        } elsif ($command->{type} eq 'write-tera-storage-json') {
+            my $json = create_tera_storage_json $repository;
+            write_json $json => $command->{value};
         }
     }
 
@@ -180,6 +231,12 @@ argument C<hoge>, the C<hoge> property of the database C<A[4]> is set
 to C<fuga_4> by the command.  If the C<hoge.template> property is not
 specified, nothing happens.  Multiple properties can be specified as
 comma-separated list.
+
+=item --write-tera-storage-json=FILENAME
+
+Generate the storage mapping table data in Tera timeline's
+C<storage.json> format.  The generated JSON data is saved in the
+specified file name.
 
 =back
 

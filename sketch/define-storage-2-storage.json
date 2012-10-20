@@ -1,0 +1,77 @@
+{
+   "db_set_info" : {
+      "timeline" : [
+         {
+            "db" : "timeline_12_1",
+            "db_set" : "timeline",
+            "tables" : [
+               {
+                  "table" : "tlindex_12_1"
+               },
+               {
+                  "table" : "tlindex_option_12_1"
+               }
+            ],
+            "writable" : ""
+         },
+         {
+            "db" : "timeline_13_1",
+            "db_set" : "timeline",
+            "tables" : [
+               {
+                  "table" : "tlindex_13_1"
+               },
+               {
+                  "table" : "tlindex_option_13_1"
+               }
+            ],
+            "writable" : ""
+         },
+         {
+            "db" : "timeline_12_2",
+            "db_set" : "timeline",
+            "tables" : [
+               {
+                  "table" : "tlindex_option_12_2"
+               },
+               {
+                  "table" : "tlindex_12_2"
+               }
+            ],
+            "writable" : ""
+         }
+      ],
+      "timeline_delivery" : [
+         {
+            "db" : "timeline_delivery_12_1",
+            "db_set" : "timeline_delivery",
+            "tables" : [
+               {
+                  "table" : "tlindex_delivery_12_1",
+                  "table_stem" : "tlindex_delivery"
+               },
+               {
+                  "table" : "tlindex_delivery_12_2",
+                  "table_stem" : "tlindex_delivery"
+               }
+            ],
+            "writable" : ""
+         }
+      ],
+      "user" : [
+         {
+            "db" : "user",
+            "db_set" : "user",
+            "tables" : [
+               {
+                  "table" : "user_option"
+               },
+               {
+                  "table" : "user"
+               }
+            ],
+            "writable" : ""
+         }
+      ]
+   }
+}
