@@ -28,28 +28,108 @@ sub parse_by_file_names ($) {
     return $parser->repository;
 }
 
+sub fill_instance_prop ($$) {
+    my ($repo, $name) = @_;
+    my $has_error;
+
+    $repo->for_each_storage_set(sub {
+        my $storage_set = $_;
+        my $code = sub {
+            my ($obj, $type) = @_;
+            next if defined $obj->get_prop($name);
+            my $obj_set = $type eq 'db'
+                ? $repo->get_db_set($storage_set, $obj->name)
+                : do {
+                    my $db_set = $repo->get_db_set($storage_set, $obj->db_set_name);
+                    $repo->get_table_set($storage_set, $db_set, $obj->name);
+                };
+            my $template = $obj_set->get_prop($name . '.template');
+            if (defined $template) {
+                my $set_suffixes = $obj_set->suffixes;
+                my $ins_suffixes = $obj->suffixes;
+                $template =~ s[\{([^{}]+)\}][
+                    my $t = $1;
+                    if ($t =~ /^\$([0-9]+)\.([0-9A-Za-z_.-]+)$/) {
+                        if (my $ss = $set_suffixes->[$1 - 1]) {
+                            my $is = $ins_suffixes->[$1 - 1];
+                            if ($ss->{type}) {
+                                my $type = $repo->get_table_suffix_type($storage_set, $ss->{type});
+                                my $suf = $repo->get_table_suffix($storage_set, $type, $is->{name});
+                                my $prop = $suf->get_prop($2);
+                                if (defined $prop) {
+                                    $prop;
+                                } else {
+                                    $has_error = 1;
+                                    "{NOT DEFINED: \$$1.$2}";
+                                }
+                            } else {
+                                $has_error = 1;
+                                "{NOT DEFINED: \$$1.$2}";
+                            }
+                        } else {
+                            $has_error = 1;
+                            "{ERROR: \$$1 not found}";
+                        }
+                    } elsif ($t =~ /^\$([0-9]+)$/) {
+                        my $is = $ins_suffixes->[$1 - 1];
+                        if ($is->{name}) {
+                            $is->{name};
+                        } else {
+                            $has_error = 1;
+                            "{ERROR: \$$1 not found}";
+                        }
+                    } else {
+                        $has_error = 1;
+                        "{ERROR: $t}";
+                    }
+                ]ge;
+
+                $obj->set_prop($name => $template);
+            }
+        };
+        $repo->for_each_db($storage_set, $code, 'db');
+        $repo->for_each_table($storage_set, $code, 'table');
+    });
+    
+    return not $has_error;
+}
+
 {
     my @command;
     
     GetOptions(
         '--help' => sub { pod2usage(-verbose => 2) },
 
-        map {
+        (map {
             my $v = $_;
             "--$v" => sub { push @command, {type => $v} },
-        } qw(print-as-testable),
+        } qw(print-as-testable)),
+        (map {
+            my $v = $_;
+            "--$v=s" => sub { push @command, {type => $v, value => $_[1]} },
+        } qw(fill-instance-prop)),
     ) or pod2usage(-verbose => 1);
 
     unshift @command, {type => 'parse-files', file_names => [@ARGV]};
 
     my $repository;
-
+    my $has_error;
     for my $command (@command) {
         if ($command->{type} eq 'parse-files') {
             $repository = parse_by_file_names $command->{file_names};
         } elsif ($command->{type} eq 'print-as-testable') {
             print $repository->as_testable;
+        } elsif ($command->{type} eq 'fill-instance-prop') {
+            for (split /,/, $command->{value}) {
+                $has_error = not fill_instance_prop $repository, $_;
+            }
         }
+    }
+
+    if ($has_error) {
+        die "Failed\n";
+    } else {
+        print STDERR "Done\n";
     }
 }
 
@@ -89,6 +169,17 @@ There are following commands:
 
 Prints the definitions loaded from the input files in the "testable"
 (or canonical) serialization form.
+
+=item --fill-instance-prop=PROP1,PROP2,...
+
+Set the instances' property values, if not specified, by classes'
+template property values.  For example, if the database set C<A[]> has
+property C<hoge.template> with value C<fuga_{$1}> and the database
+C<A[4]> has no property C<hoge>, and then the command is executed with
+argument C<hoge>, the C<hoge> property of the database C<A[4]> is set
+to C<fuga_4> by the command.  If the C<hoge.template> property is not
+specified, nothing happens.  Multiple properties can be specified as
+comma-separated list.
 
 =back
 

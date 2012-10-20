@@ -1,3 +1,4 @@
+storage_role myapp1-queuedb
 storage_role myapp1-timelinedb1
   .desc = Timeline DB, region 1
 storage_role myapp1-timelinedb2
@@ -25,40 +26,68 @@ table_suffix timeline_type.guestbook
   .index = 13
   .timeline_type_id = 3
 db_set timeline[timeline_type][]
-  .name_template = timeline_{$1.index}_{$2}
+  .name.template = timeline_{$1.index}_{$2}
 table_set timeline.index[timeline_type][]
-  .name_template = tlindex_{$1.index}_{$2}
+  .name.template = tlindex_{$1.index}_{$2}
 table_set timeline.index_option[timeline_type][]
-  .name_template = tlindex_option_{$1.index}_{$2}
+  .name.template = tlindex_option_{$1.index}_{$2}
+db_set timeline_delivery[timeline_type][]
+  .name.template = timeline_delivery_{$1.index}_{$2}
+table_set timeline_delivery.index_delivery[timeline_type][]
+  .name.template = tlindex_delivery_{$1.index}_{$2}
+  .table_stem.template = tlindex_delivery
+  .timeline_type.template = {$1.timeline_type_id}
 db_set user
   .desc = User database
-  .name_template = user
+  .name.template = user
 table_set user.user
   .desc = User main data
-  .name_template = user
+  .name.template = user
 table_set user.user_option
   .desc = User additional data
-  .name_template = user_option
+  .name.template = user_option
 db myapp1-timelinedb1.timeline[activities][1]
   .datasource.backend1 <- batch,default,master
   .datasource.backend2 <- batch,default
   .datasource.checker <- batch
+  .name = timeline_12_1
 db myapp1-timelinedb2.timeline[activities][2]
   .datasource.backend1 <- batch,default
   .datasource.backend2 <- batch,default,master
   .datasource.checker <- batch
+  .name = timeline_12_2
 db myapp1-timelinedb1.timeline[guestbook][1]
   .datasource.backend1 <- batch,default,master
   .datasource.backend2 <- batch,default
   .datasource.checker <- batch
+  .name = timeline_13_1
+db myapp1-queuedb.timeline_delivery[activities][1]
+  .name = timeline_delivery_12_1
 db myapp1-userdb.user
   .datasource.backend1 <- batch,default
   .datasource.backend2 <- batch,default
+  .name = user
 table timeline[activities][1].index[activities][1]
+  .name = tlindex_12_1
 table timeline[activities][2].index[activities][2]
+  .name = tlindex_12_2
 table timeline[guestbook][1].index[guestbook][1]
+  .name = tlindex_13_1
+table timeline_delivery[activities][1].index_delivery[activities][1]
+  .name = tlindex_delivery_12_1
+  .table_stem = tlindex_delivery
+  .timeline_type = 2
+table timeline_delivery[activities][1].index_delivery[activities][2]
+  .name = tlindex_delivery_12_2
+  .table_stem = tlindex_delivery
+  .timeline_type = 2
 table timeline[activities][1].index_option[activities][1]
+  .name = tlindex_option_12_1
 table timeline[activities][2].index_option[activities][2]
+  .name = tlindex_option_12_2
 table timeline[guestbook][1].index_option[guestbook][1]
+  .name = tlindex_option_13_1
 table user.user
+  .name = user
 table user.user_option
+  .name = user_option

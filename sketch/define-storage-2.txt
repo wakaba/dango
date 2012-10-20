@@ -4,14 +4,14 @@ storage_set myapp1
 
 db_set user
   .desc = User database
-  .name_template = user
+  .name.template = user
 
 table_set user.user
   .desc = User main data
-  .name_template = user
+  .name.template = user
 table_set user.user_option
   .desc = User additional data
-  .name_template = user_option
+  .name.template = user_option
 
 table_suffix_type timeline_type
 
@@ -26,12 +26,18 @@ table_suffix timeline_type.feed
   .timeline_type_id = 4
 
 db_set timeline[timeline_type][]
-  .name_template = timeline_{$1.index}_{$2}
+  .name.template = timeline_{$1.index}_{$2}
+db_set timeline_delivery[timeline_type][]
+  .name.template = timeline_delivery_{$1.index}_{$2}
 
 table_set timeline.index[timeline_type][]
-  .name_template = tlindex_{$1.index}_{$2}
+  .name.template = tlindex_{$1.index}_{$2}
 table_set timeline.index_option[timeline_type][]
-  .name_template = tlindex_option_{$1.index}_{$2}
+  .name.template = tlindex_option_{$1.index}_{$2}
+table_set timeline_delivery.index_delivery[timeline_type][]
+  .name.template = tlindex_delivery_{$1.index}_{$2}
+  .table_stem.template = tlindex_delivery
+  .timeline_type.template = {$1.timeline_type_id}
 
 storage_role myapp1-userdb
   .desc = User DB
@@ -42,6 +48,7 @@ storage_role myapp1-timelinedb1
   .desc = Timeline DB, region 1
 storage_role myapp1-timelinedb2
   .desc = Timeline DB, region 2
+storage_role myapp1-queuedb
 
 app_role backend1
   .desc = Default application servers, region 1
@@ -71,9 +78,14 @@ db myapp1-timelinedb2.timeline[activities][2]
   .datasource.backend2 <- master,default,batch
   .datasource.checker  <-                batch
 
+db myapp1-queuedb.timeline_delivery[activities][1]
+
 table timeline[activities][1].index[activities][1]
 table timeline[activities][1].index_option[activities][1]
 table timeline[guestbook][1].index[guestbook][1]
 table timeline[guestbook][1].index_option[guestbook][1]
 table timeline[activities][2].index[activities][2]
 table timeline[activities][2].index_option[activities][2]
+
+table timeline_delivery[activities][1].index_delivery[activities][1]
+table timeline_delivery[activities][1].index_delivery[activities][2]

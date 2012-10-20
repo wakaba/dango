@@ -82,6 +82,27 @@ sub get_db {
     return $self->{db}->{$storage_set->name}->{$name, map { $_->{name} } @$suffixes}; # or undef
 }
 
+sub for_each_storage_set {
+    my ($self, $code, @args) = @_;
+    for (values %{$self->{storage_set} or {}}) {
+        $code->($_, @args) if $_;
+    }
+}
+
+sub for_each_db {
+    my ($self, $storage_set, $code, @args) = @_;
+    for (values %{$self->{db}->{$storage_set->name} or {}}) {
+        $code->($_, @args) if $_;
+    }
+}
+
+sub for_each_table {
+    my ($self, $storage_set, $code, @args) = @_;
+    for (values %{$self->{table}->{$storage_set->name} or {}}) {
+        $code->($_, @args) if $_;
+    }
+}
+
 sub as_testable {
     my $self = shift;
     my $result = '';
