@@ -234,8 +234,8 @@ sub parse_char_string {
                 $has_error = 1;
                 next;
             }
-            my $suffixes = $self->parse_suffix_instance($storage_set, $db_set, $3, $line_number, $line);
-            my $db = $repo->get_db($storage_set, $2, $suffixes);
+            my $db_suffixes = $self->parse_suffix_instance($storage_set, $db_set, $3, $line_number, $line);
+            my $db = $repo->get_db($storage_set, $2, $db_suffixes);
             unless ($db) {
                 $self->onerror->(
                     message => "Database $2$3 not defined",

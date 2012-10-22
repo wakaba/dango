@@ -138,6 +138,13 @@ sub create_tera_storage_json ($) {
             push @{[grep { $_->{db} eq $table_db_name } @{$result->{db_set_info}->{$table->db_set_name}}]->[0]->{tables} or []}, $table_def;
         });
     });
+
+    for (values %{$result->{db_set_info}}) {
+        $_ = [sort { $a->{db} cmp $b->{db} } @$_];
+        for (@$_) {
+            $_->{tables} = [sort { $a->{table} cmp $b->{table} } @{$_->{tables}}];
+        }
+    }
     
     return $result;
 }
