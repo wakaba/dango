@@ -7,8 +7,8 @@ use Dango::Object::ApplicationRole;
 use Dango::Object::StorageSet;
 use Dango::Object::DatabaseSet;
 use Dango::Object::TableSet;
-use Dango::Object::TableSuffixType;
-use Dango::Object::TableSuffix;
+use Dango::Object::SuffixType;
+use Dango::Object::Suffix;
 use Dango::Object::Database;
 use Dango::Object::Table;
 
@@ -58,7 +58,7 @@ sub parse_char_string {
 
         # Set definitions
 
-        } elsif ($line =~ /^(db_set|table_suffix_type)\s+([0-9A-Za-z_-]+)((?:\[[0-9A-Za-z_-]*\])*)$/) {
+        } elsif ($line =~ /^(db_set|suffix_type)\s+([0-9A-Za-z_-]+)((?:\[[0-9A-Za-z_-]*\])*)$/) {
             unless ($storage_set) {
                 $self->onerror->(
                     message => "Storage set is not defined yet",
@@ -69,7 +69,7 @@ sub parse_char_string {
             }
             my $cls = {
                 db_set => 'Dango::Object::DatabaseSet',
-                table_suffix_type => 'Dango::Object::TableSuffixType',
+                suffix_type => 'Dango::Object::SuffixType',
             }->{$1};
             my $obj = $cls->new_from_storage_set_and_name($storage_set, $2);
             if ($repo->has_object($obj)) {
@@ -88,7 +88,7 @@ sub parse_char_string {
             $obj->suffixes($suffixes);
             $repo->add_object($obj);
             $last_obj = $obj;
-        } elsif ($line =~ /^(table_set|table_suffix)\s+([0-9A-Za-z_-]+)\.([0-9A-Za-z_-]+)((?:\[[0-9A-Za-z_-]*\])*)$/) {
+        } elsif ($line =~ /^(table_set|suffix)\s+([0-9A-Za-z_-]+)\.([0-9A-Za-z_-]+)((?:\[[0-9A-Za-z_-]*\])*)$/) {
             unless ($storage_set) {
                 $self->onerror->(
                     message => "Storage set is not defined yet",
@@ -104,10 +104,10 @@ sub parse_char_string {
                     constructor => 'new_from_storage_set_and_db_set_and_name',
                     allow_suffixes => 1,
                 },
-                table_suffix => {
-                    get_parent => 'get_table_suffix_type',
-                    class => 'Dango::Object::TableSuffix',
-                    constructor => 'new_from_storage_set_and_table_suffix_type_and_name',
+                suffix => {
+                    get_parent => 'get_suffix_type',
+                    class => 'Dango::Object::Suffix',
+                    constructor => 'new_from_storage_set_and_suffix_type_and_name',
                     allow_suffixes => 0,
                 },
             }->{$1};
@@ -253,13 +253,13 @@ sub parse_char_string {
                 $has_error = 1;
                 next;
             }
-            my $table_suffixes = $self->parse_suffix_instance($storage_set, $table_set, $5, $line_number, $line);
-            unless ($table_suffixes) {
+            my $suffixes = $self->parse_suffix_instance($storage_set, $table_set, $5, $line_number, $line);
+            unless ($suffixes) {
                 $has_error = 1;
                 next;
             }
             my $obj = Dango::Object::Table->new_from_storage_set_and_db_and_table_set($storage_set, $db, $table_set);
-            $obj->suffixes($table_suffixes);
+            $obj->suffixes($suffixes);
             if ($repo->has_object($obj)) {
                 $self->onerror->(
                     message => "Duplicate definition",
@@ -316,8 +316,8 @@ sub parse_suffix_definition {
     my $suffixes = [];
     while ($text =~ s/^\[([0-9A-Za-z_-]*)\]//) {
         if (length $1) {
-            my $table_suffix_type = $repo->get_table_suffix_type($storage_set, $1);
-            unless ($table_suffix_type) {
+            my $suffix_type = $repo->get_suffix_type($storage_set, $1);
+            unless ($suffix_type) {
                 $self->onerror->(
                     message => "Table suffix type $1 not defined",
                     line => $line_number, line_data => $line,
@@ -340,9 +340,9 @@ sub parse_suffix_instance {
         my $s = $class_suffixes->[$i];
         if ($s) {
             if (defined $s->{type}) {
-                my $table_suffix_type = $repo->get_table_suffix_type($storage_set, $s->{type});
-                my $table_suffix = $repo->get_table_suffix($storage_set, $table_suffix_type, $1);
-                unless ($table_suffix) {
+                my $suffix_type = $repo->get_suffix_type($storage_set, $s->{type});
+                my $suffix = $repo->get_suffix($storage_set, $suffix_type, $1);
+                unless ($suffix) {
                     $self->onerror->(
                         message => "Table suffix $1 not defined",
                         line => $line_number, line_data => $line,

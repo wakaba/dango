@@ -124,79 +124,79 @@ Table suffix type xyz not defined at line 2 (db_set abc[xyz])
 
 #data
 storage_set hoge
-table_suffix_type a-bc
+suffix_type a-bc
 #parsed
 storage_set hoge
-table_suffix_type a-bc
+suffix_type a-bc
 
 #data
 storage_set hoge
-  table_suffix_type --
+  suffix_type --
 db_set abc
 #parsed
 storage_set hoge
-table_suffix_type --
+suffix_type --
 db_set abc
 
 #data
-table_suffix_type hoge
+suffix_type hoge
 storage_set hoge
 #parsed
 storage_set hoge
 #errors
-Storage set is not defined yet at line 1 (table_suffix_type hoge)
+Storage set is not defined yet at line 1 (suffix_type hoge)
 
 #data
 storage_set hoge
-table_suffix_type   type1
-table_suffix type1.aa
-table_suffix type1.bb
+suffix_type   type1
+suffix type1.aa
+suffix type1.bb
 #parsed
 storage_set hoge
-table_suffix_type type1
-table_suffix type1.aa
-table_suffix type1.bb
+suffix_type type1
+suffix type1.aa
+suffix type1.bb
 
 #data
 storage_set hoge
-table_suffix  type.value
-#parsed
-storage_set hoge
-#errors
-Object type not defined at line 2 (table_suffix  type.value)
-
-#data
-table_suffix type.value
-storage_set hoge
+suffix  type.value
 #parsed
 storage_set hoge
 #errors
-Storage set is not defined yet at line 1 (table_suffix type.value)
+Object type not defined at line 2 (suffix  type.value)
+
+#data
+suffix type.value
+storage_set hoge
+#parsed
+storage_set hoge
+#errors
+Storage set is not defined yet at line 1 (suffix type.value)
 
 #data
 storage_set hoge
-table_suffix_type abc
-table_suffix abc.xy
-table_suffix abc.dd
+suffix_type abc
+suffix abc.xy
+suffix abc.dd
 db_set aab[abc]
 table_set aab.def[abc]
 #parsed
 storage_set hoge
-table_suffix_type abc
-table_suffix abc.dd
-table_suffix abc.xy
+suffix_type abc
+suffix abc.dd
+suffix abc.xy
 db_set aab[abc]
 table_set aab.def[abc]
 
 #data
 storage_set hoge
-table_suffix_type abc
-table_suffix abc.def[]
+suffix_type abc
+suffix abc.def[]
 #parsed
 storage_set hoge
-table_suffix_type abc
+suffix_type abc
 #errors
-Syntax error at line 3 (table_suffix abc.def[])
+Syntax error at line 3 (suffix abc.def[])
 
 #data
 storage_role hoge1
@@ -330,81 +330,81 @@ Table suffix abc is not an integer at line 4 (db abc.fuga[abc])
 
 #data
 storage_set hoge
-table_suffix_type xyz
+suffix_type xyz
 db_set fuga[xyz]
 storage_role abc
 db abc.fuga[abc]
 #parsed
 storage_role abc
 storage_set hoge
-table_suffix_type xyz
+suffix_type xyz
 db_set fuga[xyz]
 #errors
 Table suffix abc not defined at line 5 (db abc.fuga[abc])
 
 #data
 storage_set hoge
-table_suffix_type xyz
-table_suffix xyz.abc
+suffix_type xyz
+suffix xyz.abc
 db_set fuga[xyz]
 storage_role abc
 db abc.fuga[abc]
 #parsed
 storage_role abc
 storage_set hoge
-table_suffix_type xyz
-table_suffix xyz.abc
+suffix_type xyz
+suffix xyz.abc
 db_set fuga[xyz]
 db abc.fuga[abc]
 #errors
 
 #data
 storage_set hoge
-table_suffix_type xyz
-table_suffix xyz.abc
+suffix_type xyz
+suffix xyz.abc
 db_set fuga[xyz][]
 storage_role abc
 db abc.fuga[abc][20]
 #parsed
 storage_role abc
 storage_set hoge
-table_suffix_type xyz
-table_suffix xyz.abc
+suffix_type xyz
+suffix xyz.abc
 db_set fuga[xyz][]
 db abc.fuga[abc][20]
 #errors
 
 #data
 storage_set hoge
-table_suffix_type xyz
-table_suffix xyz.abc
-table_suffix_type aaa
-table_suffix aaa.bBB
+suffix_type xyz
+suffix xyz.abc
+suffix_type aaa
+suffix aaa.bBB
 db_set fuga[xyz][aaa][xyz]
 storage_role abc
 db abc.fuga[abc][bBB][abc]
 #parsed
 storage_role abc
 storage_set hoge
-table_suffix_type aaa
-table_suffix aaa.bBB
-table_suffix_type xyz
-table_suffix xyz.abc
+suffix_type aaa
+suffix aaa.bBB
+suffix_type xyz
+suffix xyz.abc
 db_set fuga[xyz][aaa][xyz]
 db abc.fuga[abc][bBB][abc]
 
 #data
 storage_set hoge
-table_suffix_type xyz
-table_suffix xyz.abc
+suffix_type xyz
+suffix xyz.abc
 db_set fuga[][xyz]
 storage_role abc
 db abc.fuga[0][abc]
 #parsed
 storage_role abc
 storage_set hoge
-table_suffix_type xyz
-table_suffix xyz.abc
+suffix_type xyz
+suffix xyz.abc
 db_set fuga[][xyz]
 db abc.fuga[0][abc]
 #errors
@@ -444,7 +444,7 @@ table fuga[1].bar[2]
 #data
 storage_set hoge
 storage_role fuga
-table_suffix_type abc
+suffix_type abc
 db_set aaa[abc]
 table_set aaa.def[abc]
 db fuga.aaa[124]
@@ -452,7 +452,7 @@ table aaa[124].def[133]
 #parsed
 storage_role fuga
 storage_set hoge
-table_suffix_type abc
+suffix_type abc
 db_set aaa[abc]
 table_set aaa.def[abc]
 #errors
@@ -463,9 +463,9 @@ Database aaa[124] not defined at line 7 (table aaa[124].def[133])
 #data
 storage_set hoge
 storage_role fuga
-table_suffix_type abc
-table_suffix abc.133
-table_suffix abc.124
+suffix_type abc
+suffix abc.133
+suffix abc.124
 db_set aaa[abc]
 table_set aaa.def[abc]
 db fuga.aaa[124]
@@ -473,9 +473,9 @@ table aaa[124].def[133]
 #parsed
 storage_role fuga
 storage_set hoge
-table_suffix_type abc
-table_suffix abc.124
-table_suffix abc.133
+suffix_type abc
+suffix abc.124
+suffix abc.133
 db_set aaa[abc]
 table_set aaa.def[abc]
 db fuga.aaa[124]

@@ -65,8 +65,8 @@ sub fill_instance_prop ($$) {
                         if (my $ss = $set_suffixes->[$1 - 1]) {
                             my $is = $ins_suffixes->[$1 - 1];
                             if ($ss->{type}) {
-                                my $type = $repo->get_table_suffix_type($storage_set, $ss->{type});
-                                my $suf = $repo->get_table_suffix($storage_set, $type, $is->{name});
+                                my $type = $repo->get_suffix_type($storage_set, $ss->{type});
+                                my $suf = $repo->get_suffix($storage_set, $type, $is->{name});
                                 my $prop = $suf->get_prop($2);
                                 if (defined $prop) {
                                     $prop;

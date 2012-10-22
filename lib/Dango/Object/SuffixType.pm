@@ -1,4 +1,4 @@
-package Dango::Object::TableSuffixType;
+package Dango::Object::SuffixType;
 use strict;
 use warnings;
 use Dango::Object::Base;
@@ -9,11 +9,11 @@ sub new_from_storage_set_and_name {
 }
 
 sub type {
-    return 'table_suffix_type';
+    return 'suffix_type';
 }
 
 sub _as_testable {
-    return sprintf 'table_suffix_type %s',
+    return sprintf 'suffix_type %s',
         $_[0]->name;
 }
 

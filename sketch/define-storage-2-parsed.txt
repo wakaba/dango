@@ -15,14 +15,14 @@ app_role backend2
 app_role checker
   .desc = Read-only storage checker
 storage_set myapp1
-table_suffix_type timeline_type
-table_suffix timeline_type.activities
+suffix_type timeline_type
+suffix timeline_type.activities
   .index = 12
   .timeline_type_id = 2
-table_suffix timeline_type.feed
+suffix timeline_type.feed
   .index = 14
   .timeline_type_id = 4
-table_suffix timeline_type.guestbook
+suffix timeline_type.guestbook
   .index = 13
   .timeline_type_id = 3
 db_set timeline[timeline_type][]
