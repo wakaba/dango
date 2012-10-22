@@ -6,10 +6,16 @@ use Path::Class;
 use Dango::Parser;
 use Encode;
 use Karasuma::Config::JSON;
-use JSON::Functions::XS qw(perl2json_bytes_for_record);
+use JSON::Functions::XS qw(perl2json_bytes_for_record json_bytes2perl);
 
 sub mkdir_for_file ($) {
     file($_[0])->dir->mkpath;
+}
+
+sub write_text ($$) {
+    mkdir_for_file $_[1];
+    open my $file, '>', $_[1] or die "$0: $_[1]: $!";
+    print $file $_[0];
 }
 
 sub write_json ($$) {
@@ -208,12 +214,81 @@ sub create_mackerel2_role_json_for_tera_standalone ($$) {
     return $result;
 }
 
+sub read_mackerel2_role_json ($) {
+    my $f = shift;
+    my $json = json_bytes2perl $f->slurp;
+    if ($json and ref $json eq 'HASH') {
+        return $json;
+    } else {
+        return undef;
+    }
+}
+
+sub create_create_database_standalone_list ($) {
+    my $repo = shift;
+
+    my $result = [];
+
+    $repo->for_each_storage_set(sub {
+        my $storage_set = $_[0];
+        $repo->for_each_db($storage_set, sub {
+            my $db = $_[0];
+            push @$result, 'CREATE DATABASE IF NOT EXISTS `' . $db->get_prop('name') . '`;';
+        });
+    });
+
+    return join "\n", sort { $a cmp $b } @$result;
+}
+
+sub dsn ($$$$$) {
+    my ($config, $role, $db, $role_json, $set) = @_;
+    my ($hostname, $port) = split /:/, $role_json->{$role->name . '-' . $set}, 2;
+    my $user = $config->get_file_base64_text('dango.database.user');
+    my $pass = $config->get_file_base64_text('dango.database.password');
+    die "dango.database.user not defined in config json\n" unless defined $user;
+    die "dango.database.password not defined in config json\n" unless defined $pass;
+    return sprintf 'DBI:mysql:dbname=%s;host=%s%s;user=%s;password=%s',
+        $db->get_prop('name'),
+        $hostname, ($port ? ';port=' . $port : ''),
+        $user,
+        $pass;
+}
+
+sub create_dsns_json ($$$) {
+    my ($repo, $config, $role_json) = @_;
+
+    # <https://github.com/wakaba/perl-rdb-utils/wiki/dsns.json>
+
+    my $result = {dsns => {}};
+
+    $repo->for_each_storage_set(sub {
+        my $storage_set = $_[0];
+        my $slave_type = $storage_set->get_prop('current_slave_set');
+        $repo->for_each_db($storage_set, sub {
+            my $db = $_[0];
+            my $role = $repo->get_storage_role($db->storage_role_name);
+            my $name = $db->get_prop('name');
+            if (defined $slave_type and
+                ($role->get_prop('slave_sets') or {})->{$slave_type}) {
+                $result->{dsns}->{$name} = dsn $config, $role, $db, $role_json, 'slave-' . $slave_type;
+                $result->{alt_dsns}->{master}->{$name} = dsn $config, $role, $db, $role_json, 'master';
+            } else {
+                $result->{dsns}->{$name} = dsn $config, $role, $db, $role_json, 'master';
+            }
+        });
+    });
+
+    return $result;
+}
+
 {
     my @command;
     my $config_json_file_name;
+    my $config_keys_dir_name;
     
     GetOptions(
         '--config-json-file-name=s' => \$config_json_file_name,
+        '--config-keys-dir-name=s' => \$config_keys_dir_name,
         '--help' => sub { pod2usage(-verbose => 2) },
 
         (map {
@@ -225,7 +300,10 @@ sub create_mackerel2_role_json_for_tera_standalone ($$) {
             "--$v=s" => sub { push @command, {type => $v, value => $_[1]} },
         } qw(
             fill-instance-prop write-tera-storage-json
+            read-mackerel2-role-json
             write-tera-standalone-mackerel2-role-json
+            write-create-database-single-text
+            write-dsns-json
         )),
     ) or pod2usage(-verbose => 1);
     pod2usage(-verbose => 1) unless @ARGV == 1;
@@ -237,6 +315,7 @@ sub create_mackerel2_role_json_for_tera_standalone ($$) {
         my $f = file($config_json_file_name);
         if (-f $f) {
             $config = Karasuma::Config::JSON->new_from_json_f($f);
+            $config->base_d(dir($config_keys_dir_name || '.'));
         } else {
             die "$0: $f: Not found\n";
         }
@@ -244,6 +323,7 @@ sub create_mackerel2_role_json_for_tera_standalone ($$) {
 
     my $repository;
     my $has_error;
+    my $role_json;
     for my $command (@command) {
         if ($command->{type} eq 'parse-file') {
             $repository = parse_by_file_name $command->{file_name}, $config;
@@ -256,8 +336,20 @@ sub create_mackerel2_role_json_for_tera_standalone ($$) {
         } elsif ($command->{type} eq 'write-tera-storage-json') {
             my $json = create_tera_storage_json $repository;
             write_json $json => $command->{value};
+        } elsif ($command->{type} eq 'read-mackerel2-role-json') {
+            unless (-f $command->{value}) {
+                die "File $command->{value} not found";
+            } else {
+                $role_json = read_mackerel2_role_json file($command->{value});
+            }
         } elsif ($command->{type} eq 'write-tera-standalone-mackerel2-role-json') {
             my $json = create_mackerel2_role_json_for_tera_standalone $repository, $config;
+            write_json $json => $command->{value};
+        } elsif ($command->{type} eq 'write-create-database-single-text') {
+            my $text = create_create_database_standalone_list $repository;
+            write_text $text => $command->{value};
+        } elsif ($command->{type} eq 'write-dsns-json') {
+            my $json = create_dsns_json $repository, $config, $role_json;
             write_json $json => $command->{value};
         }
     }
@@ -329,6 +421,22 @@ Generate the storage role - hostname/port mapping data in Mackerel2
 format, from Tera timeline's standalone server configuration file
 (specified by C<--config-json-file-name>).
 
+=item --write-create-database-single-text=FILE
+
+Generate the list of SQL C<CREATE DATABASE> statements for databases
+in the storage description.
+
+=item --read-mackerel2-role-json=FILE
+
+Read the specified file as storage role - hostname/port mapping data
+in Mackerel2 format.  The data is used to generate C<dsns.json>.
+
+=item --write-dsns-json=FILE
+
+Generate the C<dsns.json> file
+<https://github.com/wakaba/perl-rdb-utils/wiki/dsns.json> from the
+storage description.
+
 =back
 
 In addition, following options are available:
@@ -341,6 +449,12 @@ Specify the path to the file which contains the JSON data used to
 interpret the input storage descrition.  If the input storage
 definition contains a reference to the configuration, this option must
 be specified.
+
+=item --config-keys-dir-name=DIR
+
+Specify the path to the directory which contains keys referenced by
+JSON data specified by the C<--config-json-file-name> option.  For
+more information, see L<Karasuma::Config::JSON>.
 
 =item --help
 
