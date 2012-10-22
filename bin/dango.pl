@@ -17,26 +17,23 @@ sub write_json ($$) {
     print $file perl2json_bytes_for_record $_[0];
 }
 
-sub parse_by_file_names ($) {
-    my $file_names = shift;
+sub parse_by_file_name ($) {
+    my $file_name = shift;
 
-    my $data = '';
-    for my $file_name (@$file_names) {
-        open my $file, '<', $file_name or die "$0: $file_name: $!";
+    open my $file, '<', $file_name or die "$0: $file_name: $!";
+    my $data = do {
         local $/ = undef;
-        $data .= decode 'utf-8', <$file>;
-    }
+        decode 'utf-8', <$file>;
+    };
     my $has_error = 0;
     my $parser = Dango::Parser->new;
     $parser->onerror(sub {
         my %args = @_;
-        warn "$args{message} at line $args{line} ($args{line_data})\n";
+        warn "$args{message} at $args{f} line $args{line} ($args{line_data})\n";
         $has_error = 1;
     });
-    $parser->parse_char_string($data);
-    if ($has_error) {
-        die "@$file_names: Syntax error\n";
-    }
+    $parser->parse_char_string($data, file($file_name));
+    die "$file_name: Syntax error\n" if $has_error;
     return $parser->repository;
 }
 
@@ -164,14 +161,15 @@ sub create_tera_storage_json ($) {
             "--$v=s" => sub { push @command, {type => $v, value => $_[1]} },
         } qw(fill-instance-prop write-tera-storage-json)),
     ) or pod2usage(-verbose => 1);
+    pod2usage(-verbose => 1) unless @ARGV == 1;
 
-    unshift @command, {type => 'parse-files', file_names => [@ARGV]};
+    unshift @command, {type => 'parse-file', file_name => shift @ARGV};
 
     my $repository;
     my $has_error;
     for my $command (@command) {
-        if ($command->{type} eq 'parse-files') {
-            $repository = parse_by_file_names $command->{file_names};
+        if ($command->{type} eq 'parse-file') {
+            $repository = parse_by_file_name $command->{file_name};
         } elsif ($command->{type} eq 'print-as-testable') {
             print $repository->as_testable;
         } elsif ($command->{type} eq 'fill-instance-prop') {
@@ -197,16 +195,16 @@ dango.pl - Dango
 
 =head1 SYNOPSIS
 
-  ./perl bin/dango.pl OPTIONS FILE1 FILE2 ...
+  ./perl bin/dango.pl OPTIONS FILE
   ./perl bin/dango.pl --help
 
 =head1 ARGUMENTS
 
-If one or more non-option arguments are specified, they are
-interpreted as file names relative to the current directory.  Those
-files are parsed as storage definitions.  If those files contain any
-parse error, the script prints error messages to standard error output
-and exits the script with status C<1> without executing any command.
+If a non-option arguments are specified, it is interpreted as a file
+name relative to the current directory.  The file is parsed as storage
+definition description.  If the file contains any parse error, the
+script prints error messages to standard error output and exits with
+status C<1>, without executing any command.
 
 There are two kind of options - commands and (proper) options.
 Commands specify the actions performed by the script.  Commands are
