@@ -39,8 +39,8 @@ sub parse_by_file_name ($$) {
     return $parser->repository;
 }
 
-sub fill_instance_prop ($$) {
-    my ($repo, $name) = @_;
+sub fill_instance_prop ($$$) {
+    my ($repo, $name, $config) = @_;
     my $has_error;
 
     $repo->for_each_storage_set(sub {
@@ -89,6 +89,18 @@ sub fill_instance_prop ($$) {
                             $has_error = 1;
                             "{ERROR: \$$1 not found}";
                         }
+                    } elsif ($t =~ /^--([0-9A-Za-z_.-]+)$/) {
+                        if ($config) {
+                            my $value = $config->get_text($1);
+                            if (defined $value) {
+                                $value;
+                            } else {
+                                "{ERROR: $1 not defined}";
+                            }
+                        } else {
+                            $has_error = 1;
+                            "{ERROR: No config}";
+                        }
                     } else {
                         $has_error = 1;
                         "{ERROR: $t}";
@@ -108,18 +120,23 @@ sub fill_instance_prop ($$) {
 sub create_tera_storage_json ($) {
     my $repo = shift;
 
-    my $result = {db_set_info => {}};
+    my $result = {db_set_info => {}, dc_id => {}};
 
     $repo->for_each_storage_set(sub {
         my $storage_set = $_[0];
         $repo->for_each_db($storage_set, sub {
             my $db = $_[0];
-            push @{$result->{db_set_info}->{$db->name} ||= []}, {
+            my $db_def = {
                 db => $db->get_prop('name'),
                 db_set => $db->name,
                 tables => [],
-                writable => '',
+                writable => $db->get_prop('writable'),
+                master_only => $db->get_prop('master_only'),
             };
+            for (keys %$db_def) {
+                delete $db_def->{$_} if not defined $db_def->{$_};
+            }
+            push @{$result->{db_set_info}->{$db->name} ||= []}, $db_def;
         });
         $repo->for_each_table($storage_set, sub {
             my $table = $_[0];
@@ -129,13 +146,32 @@ sub create_tera_storage_json ($) {
                 table => $table->get_prop('name'),
                 table_id => $table->get_prop('table_id'),
                 table_stem => $table->get_prop('table_stem'),
-                timeline_type => $table->get_prop('timline_type'),
+                timeline_type => $table->get_prop('timeline_type'),
             };
             for (keys %$table_def) {
                 delete $table_def->{$_} if not defined $table_def->{$_};
             }
             push @{[grep { $_->{db} eq $table_db_name } @{$result->{db_set_info}->{$table->db_set_name}}]->[0]->{tables} or []}, $table_def;
         });
+
+        for (keys %{$storage_set->get_prop('dc_id') or {}}) {
+            $result->{dc_id}->{$_} = $storage_set->get_prop('dc_id.' . $_);
+        }
+
+        my $db_name = $storage_set->get_prop('id_db.db');
+        if (defined $db_name) {
+            my @db;
+            $repo->for_each_db($storage_set, sub {
+                my $db = $_;
+                if ($db->name eq $db_name and $db->get_prop('writable')) {
+                    push @db, $db;
+                }
+            });
+            my $db = [sort { (join $;, map { $_->{name} } @{$a->suffixes}) cmp (join $;, map { $_->{name} } @{$b->suffixes}) } @db]->[0];
+            if ($db) {
+                $result->{id_db} = $db->get_prop('name');
+            }
+        }
     });
 
     for (values %{$result->{db_set_info}}) {
@@ -188,7 +224,7 @@ sub create_tera_storage_json ($) {
             print $repository->as_testable;
         } elsif ($command->{type} eq 'fill-instance-prop') {
             for (split /,/, $command->{value}) {
-                $has_error = not fill_instance_prop $repository, $_;
+                $has_error = not fill_instance_prop $repository, $_, $config;
             }
         } elsif ($command->{type} eq 'write-tera-storage-json') {
             my $json = create_tera_storage_json $repository;
