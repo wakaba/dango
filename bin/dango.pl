@@ -5,6 +5,7 @@ use Pod::Usage;
 use Path::Class;
 use Dango::Parser;
 use Encode;
+use Karasuma::Config::JSON;
 use JSON::Functions::XS qw(perl2json_bytes_for_record);
 
 sub mkdir_for_file ($) {
@@ -17,8 +18,8 @@ sub write_json ($$) {
     print $file perl2json_bytes_for_record $_[0];
 }
 
-sub parse_by_file_name ($) {
-    my $file_name = shift;
+sub parse_by_file_name ($$) {
+    my ($file_name, $config) = @_;
 
     open my $file, '<', $file_name or die "$0: $file_name: $!";
     my $data = do {
@@ -32,8 +33,9 @@ sub parse_by_file_name ($) {
         warn "$args{message} at $args{f} line $args{line} ($args{line_data})\n";
         $has_error = 1;
     });
+    $parser->config($config);
     $parser->parse_char_string($data, file($file_name));
-    die "$file_name: Syntax error\n" if $has_error;
+    die "$file_name has an error\n" if $has_error;
     return $parser->repository;
 }
 
@@ -148,8 +150,10 @@ sub create_tera_storage_json ($) {
 
 {
     my @command;
+    my $config_json_file_name;
     
     GetOptions(
+        '--config-json-file-name=s' => \$config_json_file_name,
         '--help' => sub { pod2usage(-verbose => 2) },
 
         (map {
@@ -165,11 +169,21 @@ sub create_tera_storage_json ($) {
 
     unshift @command, {type => 'parse-file', file_name => shift @ARGV};
 
+    my $config;
+    if (defined $config_json_file_name) {
+        my $f = file($config_json_file_name);
+        if (-f $f) {
+            $config = Karasuma::Config::JSON->new_from_json_f($f);
+        } else {
+            die "$0: $f: Not found\n";
+        }
+    }
+
     my $repository;
     my $has_error;
     for my $command (@command) {
         if ($command->{type} eq 'parse-file') {
-            $repository = parse_by_file_name $command->{file_name};
+            $repository = parse_by_file_name $command->{file_name}, $config;
         } elsif ($command->{type} eq 'print-as-testable') {
             print $repository->as_testable;
         } elsif ($command->{type} eq 'fill-instance-prop') {
@@ -237,7 +251,7 @@ to C<fuga_4> by the command.  If the C<hoge.template> property is not
 specified, nothing happens.  Multiple properties can be specified as
 comma-separated list.
 
-=item --write-tera-storage-json=FILENAME
+=item --write-tera-storage-json=FILE
 
 Generate the storage mapping table data in Tera timeline's
 C<storage.json> format.  The generated JSON data is saved in the
@@ -248,6 +262,13 @@ specified file name.
 In addition, following options are available:
 
 =over 4
+
+=item --config-json-file-name=FILE
+
+Specify the path to the file which contains the JSON data used to
+interpret the input storage descrition.  If the input storage
+definition contains a reference to the configuration, this option must
+be specified.
 
 =item --help
 

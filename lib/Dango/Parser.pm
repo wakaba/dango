@@ -22,6 +22,13 @@ sub repository {
     return $_[0]->{repository} ||= Dango::Repository->new;
 }
 
+sub config {
+    if (@_ > 1) {
+        $_[0]->{config} = $_[1];
+    }
+    return $_[0]->{config};
+}
+
 sub onerror {
     if (@_ > 1) {
         $_[0]->{onerror} = $_[1];
@@ -306,7 +313,7 @@ sub parse_char_string {
 
         # Properties
 
-        } elsif ($line =~ /^\.([0-9A-Za-z_-]+(?:\.[0-9A-Za-z_-]+)*)\s*(=|<-)\s*(.*)$/) {
+        } elsif ($line =~ /^\.([0-9A-Za-z_-]+(?:\.[0-9A-Za-z_-]+)*)\s*(=|<-|--)\s*(.*)$/) {
             unless ($last_obj) {
                 $self->onerror->(
                     message => "Target object is not defined yet",
@@ -332,6 +339,28 @@ sub parse_char_string {
                 $last_obj->set_prop($n => $v);
             } elsif ($op eq '<-') {
                 $last_obj->set_prop($n => {map { $_ => 1 } split /\s*,\s*/, $v});
+            } elsif ($op eq '--') {
+                my $config = $self->config;
+                unless ($config) {
+                    $self->onerror->(
+                        message => "Config object is not set",
+                        f => $input_f,
+                        line => $line_number, line_data => $line,
+                    );
+                    $has_error = 1;
+                    next;
+                }
+                my $value = $config->get_text($v);
+                if (not defined $value) {
+                    $self->onerror->(
+                        message => "Config $v is not defined",
+                        f => $input_f,
+                        line => $line_number, line_data => $line,
+                    );
+                    $has_error = 1;
+                    next;
+                }
+                $last_obj->set_prop($n => $value);
             }
 
         } else {
