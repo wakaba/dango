@@ -26,7 +26,7 @@ pmbp-install: pmbp-upgrade
 git-submodules:
 	$(GIT) submodule update --init
 
-deps: pmbp-install
+deps: git-submodules pmbp-install
 
 always:
 
