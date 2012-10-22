@@ -40,7 +40,7 @@ test-deps: deps
 	cd modules/rdb-utils && $(MAKE) deps
 
 test-main:
-	HOME="$(abspath local/home)" $(PROVE) t/*.t t/cmd/*.t
+	HOME="$(abspath local/home)" $(PROVE) t/parser/*.t t/cmd/*.t
 
 # ------ Local (example) ------
 

@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 use Path::Class;
-use lib glob file(__FILE__)->dir->parent->subdir('t_deps', 'modules', '*', 'lib')->stringify;
+use lib glob file(__FILE__)->dir->parent->parent->subdir('t_deps', 'modules', '*', 'lib')->stringify;
 use Test::X1;
 use Test::More;
 use Test::HTCT::Parser;
@@ -12,7 +12,7 @@ for my $file_name (qw(objects.dat props.dat)) {
     test {
         my $c = shift;
 
-        for_each_test file(__FILE__)->dir->subdir('data')->file($file_name), {
+        for_each_test file(__FILE__)->dir->parent->subdir('data')->file($file_name), {
             data => {is_prefixed => 1},
             parsed => {is_prefixed => 1},
             errors => {},
