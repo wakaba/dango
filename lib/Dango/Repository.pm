@@ -89,6 +89,13 @@ sub for_each_storage_set {
     }
 }
 
+sub for_each_storage_role {
+    my ($self, $code, @args) = @_;
+    for (values %{$self->{storage_role} or {}}) {
+        $code->($_, @args) if $_;
+    }
+}
+
 sub for_each_db {
     my ($self, $storage_set, $code, @args) = @_;
     for (values %{$self->{db}->{$storage_set->name} or {}}) {

@@ -184,6 +184,30 @@ sub create_tera_storage_json ($) {
     return $result;
 }
 
+sub create_mackerel2_role_json_for_tera_standalone ($$) {
+    my ($repo, $config) = @_;
+
+    my $host = $config->get_text('tera.standalone.database.host');
+    my $port = $config->get_text('tera.standalone.database.port');
+    $host = 'localhost' unless defined $host;
+    $host .= ':' . $port if $port;
+
+    my $result = {};
+    
+    $repo->for_each_storage_set(sub {
+        my $storage_set = $_[0];
+        $repo->for_each_storage_role(sub {
+            my $role = $_[0];
+            $result->{$role->name . '-master'} = $host;
+            for (keys %{$role->get_prop('slave_sets') or {}}) {
+                $result->{$role->name . '-slave-' . $_} = $host;
+            }
+        });
+    });
+
+    return $result;
+}
+
 {
     my @command;
     my $config_json_file_name;
@@ -199,7 +223,10 @@ sub create_tera_storage_json ($) {
         (map {
             my $v = $_;
             "--$v=s" => sub { push @command, {type => $v, value => $_[1]} },
-        } qw(fill-instance-prop write-tera-storage-json)),
+        } qw(
+            fill-instance-prop write-tera-storage-json
+            write-tera-standalone-mackerel2-role-json
+        )),
     ) or pod2usage(-verbose => 1);
     pod2usage(-verbose => 1) unless @ARGV == 1;
 
@@ -228,6 +255,9 @@ sub create_tera_storage_json ($) {
             }
         } elsif ($command->{type} eq 'write-tera-storage-json') {
             my $json = create_tera_storage_json $repository;
+            write_json $json => $command->{value};
+        } elsif ($command->{type} eq 'write-tera-standalone-mackerel2-role-json') {
+            my $json = create_mackerel2_role_json_for_tera_standalone $repository, $config;
             write_json $json => $command->{value};
         }
     }
@@ -292,6 +322,12 @@ comma-separated list.
 Generate the storage mapping table data in Tera timeline's
 C<storage.json> format.  The generated JSON data is saved in the
 specified file name.
+
+=item --write-tera-standalone-mackerel2-role-json=FILE
+
+Generate the storage role - hostname/port mapping data in Mackerel2
+format, from Tera timeline's standalone server configuration file
+(specified by C<--config-json-file-name>).
 
 =back
 
