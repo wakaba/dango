@@ -11,8 +11,19 @@
                {
                   "table" : "tlindex_option_12_1"
                }
-            ],
-            "writable" : ""
+            ]
+         },
+         {
+            "db" : "timeline_12_2",
+            "db_set" : "timeline",
+            "tables" : [
+               {
+                  "table" : "tlindex_12_2"
+               },
+               {
+                  "table" : "tlindex_option_12_2"
+               }
+            ]
          },
          {
             "db" : "timeline_13_1",
@@ -24,21 +35,7 @@
                {
                   "table" : "tlindex_option_13_1"
                }
-            ],
-            "writable" : ""
-         },
-         {
-            "db" : "timeline_12_2",
-            "db_set" : "timeline",
-            "tables" : [
-               {
-                  "table" : "tlindex_option_12_2"
-               },
-               {
-                  "table" : "tlindex_12_2"
-               }
-            ],
-            "writable" : ""
+            ]
          }
       ],
       "timeline_delivery" : [
@@ -48,14 +45,15 @@
             "tables" : [
                {
                   "table" : "tlindex_delivery_12_1",
-                  "table_stem" : "tlindex_delivery"
+                  "table_stem" : "tlindex_delivery",
+                  "timeline_type" : "2"
                },
                {
                   "table" : "tlindex_delivery_12_2",
-                  "table_stem" : "tlindex_delivery"
+                  "table_stem" : "tlindex_delivery",
+                  "timeline_type" : "2"
                }
-            ],
-            "writable" : ""
+            ]
          }
       ],
       "user" : [
@@ -64,14 +62,14 @@
             "db_set" : "user",
             "tables" : [
                {
-                  "table" : "user_option"
+                  "table" : "user"
                },
                {
-                  "table" : "user"
+                  "table" : "user_option"
                }
-            ],
-            "writable" : ""
+            ]
          }
       ]
-   }
+   },
+   "dc_id" : {}
 }
