@@ -106,7 +106,7 @@ sub read_mackerel2_role_json ($) {
             my $text = $process->create_preparation_text;
             write_text $text => $command->{value};
         } elsif ($command->{type} eq 'write-dsns-json') {
-            my $json = $process->create_dsns_json($role_json);
+            my $json = $process->create_dsns_jsonable($role_json);
             write_json $json => $command->{value};
         }
     }
