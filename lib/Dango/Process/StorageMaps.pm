@@ -53,7 +53,7 @@ sub fill_instance_prop {
         my $storage_set = $_;
         my $code = sub {
             my ($obj, $type) = @_;
-            next if defined $obj->get_prop($name);
+            return if defined $obj->get_prop($name);
             my $obj_set = $type eq 'db'
                 ? $repo->get_db_set($storage_set, $obj->name)
                 : do {
