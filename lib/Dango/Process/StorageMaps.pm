@@ -239,6 +239,23 @@ sub create_create_database_standalone_list {
     return join "\n", sort { $a cmp $b } @$result;
 }
 
+sub create_preparation_text {
+    my $self = shift;
+    my $repo = $self->repository;
+
+    my $result = [];
+
+    $repo->for_each_storage_set(sub {
+        my $storage_set = $_[0];
+        $repo->for_each_db($storage_set, sub {
+            my $db = $_[0];
+            push @$result, 'db ' . $db->get_prop('name');
+        });
+    });
+
+    return join "\n", sort { $a cmp $b } @$result;
+}
+
 sub _dsn {
     my ($self, $role, $db, $role_jsonable, $set) = @_;
     my $config = $self->config;

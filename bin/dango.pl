@@ -55,6 +55,7 @@ sub read_mackerel2_role_json ($) {
             read-mackerel2-role-json
             write-tera-standalone-mackerel2-role-json
             write-create-database-single-text
+            write-preparation-text
             write-dsns-json
         )),
     ) or pod2usage(-verbose => 1);
@@ -100,6 +101,9 @@ sub read_mackerel2_role_json ($) {
             write_json $json => $command->{value};
         } elsif ($command->{type} eq 'write-create-database-single-text') {
             my $text = $process->create_create_database_standalone_list;
+            write_text $text => $command->{value};
+        } elsif ($command->{type} eq 'write-preparation-text') {
+            my $text = $process->create_preparation_text;
             write_text $text => $command->{value};
         } elsif ($command->{type} eq 'write-dsns-json') {
             my $json = $process->create_dsns_json($role_json);
@@ -178,6 +182,14 @@ format, from Tera timeline's standalone server configuration file
 
 Generate the list of SQL C<CREATE DATABASE> statements for databases
 in the storage description.
+
+=item --write-preparation-text=FILE
+
+Generate the database preparation (C<CREATE DATABASE>) configuration
+file in the C<preparation.txt> format as supported by
+C<prepare-db-set.pl>.  See
+<https://github.com/wakaba/perl-rdb-utils/blob/master/bin/prepare-db-set.pl>
+for more information.
 
 =item --read-mackerel2-role-json=FILE
 
