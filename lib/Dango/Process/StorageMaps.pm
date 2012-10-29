@@ -300,9 +300,10 @@ sub create_dsns_jsonable {
             if (defined $slave_type and
                 ($role->get_prop('slave_sets') or {})->{$slave_type}) {
                 $result->{dsns}->{$name} = $self->_dsn($role, $db, $role_jsonable, 'slave-' . $slave_type);
+            }
+            if (not defined $slave_type or
+                ($role->get_prop('master_location') || '') eq $slave_type) {
                 $result->{alt_dsns}->{master}->{$name} = $self->_dsn($role, $db, $role_jsonable, 'master');
-            } else {
-                $result->{dsns}->{$name} = $self->_dsn($role, $db, $role_jsonable, 'master');
             }
         });
     });
