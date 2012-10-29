@@ -153,12 +153,13 @@ sub create_tera_storage_json ($) {
                 table_id => $table->get_prop('table_id'),
                 table_stem => $table->get_prop('table_stem'),
                 timeline_type => $table->get_prop('timeline_type'),
+                enabled => $table->get_prop('enabled'),
                 for_admin => $table->get_prop('for_admin'),
             };
             for (keys %$table_def) {
                 delete $table_def->{$_} if not defined $table_def->{$_};
             }
-            for (qw(for_admin)) {
+            for (qw(enabled for_admin)) {
                 delete $table_def->{$_} unless $table_def->{$_};
             }
             push @{[grep { $_->{db} eq $table_db_name } @{$result->{db_set_info}->{$table->db_set_name}}]->[0]->{tables} or []}, $table_def;
