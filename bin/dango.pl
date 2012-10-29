@@ -153,9 +153,13 @@ sub create_tera_storage_json ($) {
                 table_id => $table->get_prop('table_id'),
                 table_stem => $table->get_prop('table_stem'),
                 timeline_type => $table->get_prop('timeline_type'),
+                for_admin => $table->get_prop('for_admin'),
             };
             for (keys %$table_def) {
                 delete $table_def->{$_} if not defined $table_def->{$_};
+            }
+            for (qw(for_admin)) {
+                delete $table_def->{$_} unless $table_def->{$_};
             }
             push @{[grep { $_->{db} eq $table_db_name } @{$result->{db_set_info}->{$table->db_set_name}}]->[0]->{tables} or []}, $table_def;
         });
@@ -267,7 +271,7 @@ sub create_dsns_json ($$$) {
         $repo->for_each_db($storage_set, sub {
             my $db = $_[0];
             my $role = $repo->get_storage_role($db->storage_role_name);
-            my $name = $db->get_prop('name');
+            my $name = $db->get_prop('key') || $db->get_prop('name');
             if (defined $slave_type and
                 ($role->get_prop('slave_sets') or {})->{$slave_type}) {
                 $result->{dsns}->{$name} = dsn $config, $role, $db, $role_json, 'slave-' . $slave_type;
