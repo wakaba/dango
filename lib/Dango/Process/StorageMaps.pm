@@ -162,6 +162,7 @@ sub create_tera_storage_jsonable {
                 table_id => $table->get_prop('table_id'),
                 table_stem => $table->get_prop('table_stem'),
                 table_name_stem => $table->get_prop('table_name_stem'),
+                table_name_without_table_id => $table->get_prop('table_name_without_table_id'),
                 timeline_type => $table->get_prop('timeline_type'),
                 enabled => $table->get_prop('enabled'),
                 for_admin => $table->get_prop('for_admin'),
