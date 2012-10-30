@@ -1,3 +1,5 @@
+storage_role myapp1-timelinedb0
+  .desc = Timeline DB, region 0
 storage_role myapp1-timelinedb1
   .desc = Timeline DB, region 1
 storage_role myapp1-timelinedb2
@@ -39,6 +41,10 @@ table_set user.user
 table_set user.user_option
   .desc = User additional data
   .name_template = user_option
+db myapp1-timelinedb0.timeline[activities][0]
+  .datasource.backend1 <- batch,default,master
+  .datasource.backend2 <- batch,default
+  .datasource.checker <- batch
 db myapp1-timelinedb1.timeline[activities][1]
   .datasource.backend1 <- batch,default,master
   .datasource.backend2 <- batch,default
@@ -54,9 +60,11 @@ db myapp1-timelinedb1.timeline[guestbook][1]
 db myapp1-userdb.user
   .datasource.backend1 <- batch,default
   .datasource.backend2 <- batch,default
+table timeline[activities][0].index[activities][0]
 table timeline[activities][1].index[activities][1]
 table timeline[activities][2].index[activities][2]
 table timeline[guestbook][1].index[guestbook][1]
+table timeline[activities][0].index_option[activities][0]
 table timeline[activities][1].index_option[activities][1]
 table timeline[activities][2].index_option[activities][2]
 table timeline[guestbook][1].index_option[guestbook][1]

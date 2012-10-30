@@ -89,7 +89,7 @@ sub fill_instance_prop {
                         }
                     } elsif ($t =~ /^\$([0-9]+)$/) {
                         my $is = $ins_suffixes->[$1 - 1];
-                        if ($is->{name}) {
+                        if (defined $is->{name}) {
                             $is->{name};
                         } else {
                             $has_error = 1;
