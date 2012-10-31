@@ -137,6 +137,7 @@ sub create_tera_storage_jsonable {
             my $role = $repo->get_storage_role($db->storage_role_name);
             if (defined $slave_type and
                 ($role->get_prop('master_location') || '') ne $slave_type and
+                not $role->get_prop('enable_crossdc_master_access') and
                 not(($role->get_prop('slave_sets') or {})->{$slave_type})) {
                 return;
             }
@@ -302,7 +303,8 @@ sub create_dsns_jsonable {
                 $result->{dsns}->{$name} = $self->_dsn($role, $db, $role_jsonable, 'slave-' . $slave_type);
             }
             if (not defined $slave_type or
-                ($role->get_prop('master_location') || '') eq $slave_type) {
+                ($role->get_prop('master_location') || '') eq $slave_type or
+                $role->get_prop('enable_crossdc_master_access')) {
                 $result->{alt_dsns}->{master}->{$name} = $self->_dsn($role, $db, $role_jsonable, 'master');
             }
         });
