@@ -272,8 +272,10 @@ sub _dsn {
     my ($self, $role, $db, $role_jsonable, $set) = @_;
     my $config = $self->config;
     my ($hostname, $port) = split /:/, $role_jsonable->{$role->name . '-' . $set}, 2;
-    my $user = $config->get_file_base64_text('dango.database.user');
-    my $pass = $config->get_file_base64_text('dango.database.password');
+    my $user = $config->get_file_base64_text('dango.database.user.' . $set)
+        || $config->get_file_base64_text('dango.database.user');
+    my $pass = $config->get_file_base64_text('dango.database.password.' . $set)
+        || $config->get_file_base64_text('dango.database.password');
     die "dango.database.user not defined in config json\n" unless defined $user;
     die "dango.database.password not defined in config json\n" unless defined $pass;
     return sprintf 'DBI:mysql:dbname=%s;host=%s%s;user=%s;password=%s',
