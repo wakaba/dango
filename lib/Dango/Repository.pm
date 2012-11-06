@@ -52,6 +52,11 @@ sub has_object {
     }
 }
 
+sub get_storage_set {
+    my ($self, $storage_set_name) = @_;
+    return $self->{storage_set}->{$storage_set_name}; # or undef
+}
+
 sub get_db_set {
     my ($self, $storage_set, $db_set_name) = @_;
     return $self->{db_set}->{$storage_set->name}->{$db_set_name}; # or undef
