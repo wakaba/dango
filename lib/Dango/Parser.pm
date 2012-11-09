@@ -51,7 +51,7 @@ sub parse_char_string {
         next if $line =~ /^#/;
 
         if ($line =~ /^include\s+(.+)$/) {
-            my $f = $base_d->file($1);
+            my $f = file($1)->absolute($base_d);
             if (-f $f) {
                 $self->parse_char_string((decode 'utf-8', scalar $f->slurp), $f);
             } else {
