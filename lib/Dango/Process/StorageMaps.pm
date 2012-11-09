@@ -265,7 +265,7 @@ sub create_create_database_with_hosts_sh {
             my $role = $repo->get_storage_role($db->storage_role_name);
             my $data = $get_host->($role->name);
             push @$result,
-                sprintf q{echo "CREATE DATABASE IF NOT EXISTS `%s`" | mysql -u%s -p%s -h%s},
+                sprintf q{echo "CREATE DATABASE IF NOT EXISTS \\`%s\\`" | mysql -u%s -p%s -h%s},
                     $db->get_prop('name'),
                     $data->{user},
                     $data->{password},
