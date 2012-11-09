@@ -251,6 +251,48 @@ sub create_create_database_standalone_list {
     return join "\n", sort { $a cmp $b } @$result;
 }
 
+sub create_create_database_with_hosts_sh {
+    my ($self, $get_host) = @_;
+    my $repo = $self->repository;
+
+    my $result = [];
+
+    $repo->for_each_storage_set(sub {
+        my $storage_set = $_[0];
+        $repo->for_each_db($storage_set, sub {
+            my $db = $_[0];
+            my $role = $repo->get_storage_role($db->storage_role_name);
+            my $data = $get_host->($role->name);
+            push @$result,
+                sprintf q{echo "CREATE DATABASE IF NOT EXISTS `%s`" | mysql -u%s -p%s -h%s},
+                    $db->get_prop('name'),
+                    $data->{user},
+                    $data->{password},
+                    $data->{hostname};
+        });
+    });
+
+    return join "\n", sort { $a cmp $b } @$result;
+}
+
+sub create_create_database_hostdb_list {
+    my ($self, $get_host) = @_;
+    my $repo = $self->repository;
+
+    my $result = [];
+
+    $repo->for_each_storage_set(sub {
+        my $storage_set = $_[0];
+        $repo->for_each_db($storage_set, sub {
+            my $db = $_[0];
+            my $role = $repo->get_storage_role($db->storage_role_name);
+            push @$result, [$role->name, $db->get_prop('name')];
+        });
+    });
+
+    return join "\n", map { $_->[0] . ' ' . $_->[1] } @$result;
+}
+
 sub create_preparation_text {
     my $self = shift;
     my $repo = $self->repository;
