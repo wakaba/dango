@@ -261,6 +261,7 @@ sub create_create_database_with_hosts_sh {
         my $storage_set = $_[0];
         $repo->for_each_db($storage_set, sub {
             my $db = $_[0];
+            return unless $db->get_prop('writable');
             my $role = $repo->get_storage_role($db->storage_role_name);
             my $data = $get_host->($role->name);
             push @$result,
@@ -285,6 +286,7 @@ sub create_create_database_hostdb_list {
         my $storage_set = $_[0];
         $repo->for_each_db($storage_set, sub {
             my $db = $_[0];
+            return unless $db->get_prop('writable');
             my $role = $repo->get_storage_role($db->storage_role_name);
             push @$result, [$role->name, $db->get_prop('name')];
         });
