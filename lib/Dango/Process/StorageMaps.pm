@@ -277,7 +277,7 @@ sub create_create_database_with_hosts_sh {
 }
 
 sub create_create_database_hostdb_list {
-    my ($self, $get_host) = @_;
+    my ($self) = @_;
     my $repo = $self->repository;
 
     my $result = [];
@@ -293,6 +293,25 @@ sub create_create_database_hostdb_list {
     });
 
     return join "\n", map { $_->[0] . ' ' . $_->[1] } @$result;
+}
+
+sub create_role_list {
+    my $self = shift;
+    my $repo = $self->repository;
+
+    my $result = [];
+    $repo->for_each_storage_set(sub {
+        my $storage_set = $_[0];
+        $repo->for_each_storage_role(sub {
+            my $role = $_[0];
+            push @$result, $role->name . '-master';
+            for (keys %{$role->get_prop('slave_sets') or {}}) {
+                push @$result, $role->name . '-slave-' . $_;
+            }
+        });
+    });
+
+    return join "\n", sort { $a cmp $b } @$result;
 }
 
 sub create_preparation_text {
