@@ -308,6 +308,9 @@ sub create_role_list {
             for (keys %{$role->get_prop('slave_sets') or {}}) {
                 push @$result, $role->name . '-slave-' . $_;
             }
+            for (keys %{$role->get_prop('batch_sets') or {}}) {
+                push @$result, $role->name . '-slave-batch-' . $_;
+            }
         });
     });
 
@@ -367,6 +370,10 @@ sub create_dsns_jsonable {
             if (defined $slave_type and
                 ($role->get_prop('slave_sets') or {})->{$slave_type}) {
                 $result->{dsns}->{$name} = $self->_dsn($role, $db, $role_jsonable, 'slave-' . $slave_type);
+            }
+            if (defined $slave_type and
+                ($role->get_prop('batch_sets') or {})->{$slave_type}) {
+                $result->{alt_dsns}->{batch}->{$name} = $self->_dsn($role, $db, $role_jsonable, 'slave-batch-' . $slave_type);
             }
             if (not defined $slave_type or
                 ($role->get_prop('master_location') || '') eq $slave_type or
